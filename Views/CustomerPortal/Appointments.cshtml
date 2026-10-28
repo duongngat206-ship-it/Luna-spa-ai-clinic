@@ -1,0 +1,264 @@
+@model List<GiaoDienSpa.Controllers.CustomerAppointmentItem>
+@{
+    ViewData["Title"] = "Quản Lý Lịch Hẹn & Đặt Lịch Trực Tuyến";
+}
+
+<div class="customer-appointments-page">
+    <!-- Header banner -->
+    <div class="card border-0 rounded-4 shadow-sm p-4 mb-4 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f766e 100%);">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge bg-warning text-dark fw-bold rounded-pill px-3 py-1">
+                        <i class="fas fa-crown me-1"></i> ĐẶC QUYỀN HỘI VIÊN DIAMOND
+                    </span>
+                    <span class="badge bg-white bg-opacity-20 text-white rounded-pill">
+                        <i class="fas fa-shield-alt me-1"></i> Ưu tiên xếp lịch Bác sĩ CKI
+                    </span>
+                </div>
+                <h3 class="fw-bold mb-1">Lịch Hẹn Của Bạn & Đặt Hẹn Trực Tuyến 24/7</h3>
+                <p class="mb-0 text-white-50">Chủ động sắp xếp thời gian làm đẹp, lựa chọn chuyên gia điều trị và quản lý vé hẹn điện tử</p>
+            </div>
+            <div>
+                <a href="/CustomerPortal/Index" class="btn btn-outline-light rounded-pill px-4 py-2 fw-semibold">
+                    <i class="fas fa-arrow-left me-1"></i> Quay Lại Cổng VIP
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Cột Trái: Form Đặt Lịch Mới Hiện Đại -->
+        <div class="col-lg-5">
+            <div class="card border-0 rounded-4 shadow-sm p-4 bg-white sticky-top" style="top: 24px;">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <div class="rounded-3 p-2 bg-teal bg-opacity-10 text-teal fs-4">
+                        <i class="fas fa-calendar-plus"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark">Đặt Lịch Làm Đẹp Mới</h5>
+                        <small class="text-muted">Chọn dịch vụ và khung giờ thuận tiện nhất</small>
+                    </div>
+                </div>
+
+                <div id="bookingAlert" class="alert alert-success d-none rounded-3 py-2 small"></div>
+
+                <form id="bookingForm" onsubmit="event.preventDefault(); submitBooking();">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">DỊCH VỤ MONG MUỐN <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-spa text-teal"></i></span>
+                            <select id="bookService" class="form-select border-start-0" required>
+                                <option value="Laser Pico Pro Trị Tàn Nhang (Buổi tiếp theo)">Laser Pico Pro Trị Tàn Nhang (Buổi tiếp theo)</option>
+                                <option value="Khám & Quét Da AI Cùng Bác Sĩ CKI">Khám & Quét Da AI Cùng Bác Sĩ CKI</option>
+                                <option value="Aqua Detox Cấp Ẩm Đa Tầng">Aqua Detox Cấp Ẩm Đa Tầng (45 phút)</option>
+                                <option value="Nâng Cơ Trẻ Hóa Hifu Collagen">Nâng Cơ Trẻ Hóa Hifu Collagen (90 phút)</option>
+                                <option value="Peel Da Sinh Học Tái Tạo Thảo Dược">Peel Da Sinh Học Tái Tạo Thảo Dược (50 phút)</option>
+                                <option value="Massage Thư Giãn Body Tinh Dầu Thảo Mộc">Massage Thư Giãn Body Tinh Dầu Thảo Mộc (75 phút)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-dark">NGÀY HẸN <span class="text-danger">*</span></label>
+                            <input type="date" id="bookDate" class="form-control" value="@DateTime.Now.AddDays(2).ToString("yyyy-MM-dd")" required />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-dark">KHUNG GIỜ <span class="text-danger">*</span></label>
+                            <select id="bookTime" class="form-select" required>
+                                <option value="09:00">09:00 Sáng</option>
+                                <option value="10:30">10:30 Sáng</option>
+                                <option value="14:00" selected>14:00 Chiều</option>
+                                <option value="15:30">15:30 Chiều</option>
+                                <option value="17:00">17:00 Chiều</option>
+                                <option value="18:30">18:30 Tối</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">CHUYÊN GIA / BÁC SĨ PHỤ TRÁCH</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-user-md text-teal"></i></span>
+                            <select id="bookDoctor" class="form-select border-start-0">
+                                <option value="BS. CKI Lê Hoàng Yến">BS. CKI Lê Hoàng Yến (Chuyên khoa Da liễu - Laser)</option>
+                                <option value="ThS. BS Trần Minh Đức">ThS. BS Trần Minh Đức (Phẫu thuật & Trẻ hóa)</option>
+                                <option value="KTV Trưởng Nguyễn Thu Trang">KTV Trưởng Nguyễn Thu Trang (Chăm sóc VIP)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-dark">GHI CHÚ NHU CẦU ĐẶC BIỆT</label>
+                        <textarea id="bookNote" class="form-control" rows="2" placeholder="Ví dụ: Da đợt này hơi khô, muốn kết hợp đắp mặt nạ lạnh..."></textarea>
+                    </div>
+
+                    <button type="submit" id="btnSubmitBooking" class="btn btn-teal w-100 py-3 rounded-pill fw-bold shadow-sm">
+                        <i class="fas fa-paper-plane me-2"></i> Gửi Yêu Cầu Đặt Lịch Hẹn
+                    </button>
+                </form>
+
+                <div class="mt-3 p-3 rounded-3 bg-light text-muted small border">
+                    <i class="fas fa-info-circle text-teal me-1"></i> Lịch hẹn sẽ được gửi mã xác nhận E-Ticket qua SMS/Zalo trong vòng 5 phút.
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột Phải: Danh Sách Vé Hẹn Điện Tử E-Ticket (Boarding Pass Style) -->
+        <div class="col-lg-7">
+            <div class="card border-0 rounded-4 shadow-sm p-4 bg-white mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-ticket-alt text-teal me-2"></i> Vé Hẹn Khám Điện Tử Của Bạn</h5>
+                        <small class="text-muted">Xuất trình vé hẹn hoặc đọc mã số khi đến quầy lễ tân</small>
+                    </div>
+                    <span class="badge bg-teal text-white rounded-pill px-3 py-1">
+                        @Model.Count(a => a.Status == "Đã xác nhận") Lịch sắp tới
+                    </span>
+                </div>
+
+                <div class="d-flex flex-column gap-3" id="appointmentList">
+                    @foreach (var app in Model)
+                    {
+                        var isUpcoming = app.Status == "Đã xác nhận";
+                        var ticketClass = isUpcoming ? "border-teal" : "border-secondary";
+                        var badgeBg = isUpcoming ? "bg-success" : "bg-secondary";
+
+                        <div class="booking-ticket-card p-3 p-md-4 shadow-sm">
+                            <div class="row g-3 align-items-center">
+                                <div class="col-md-8">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <span class="badge @badgeBg text-white rounded-pill px-3 py-1 small fw-bold">
+                                            @app.Status
+                                        </span>
+                                        <span class="font-monospace text-muted small">MÃ VÉ: #LUNA-@app.Id@DateTime.Now.ToString("ddMM")</span>
+                                    </div>
+
+                                    <h5 class="fw-bold text-dark mb-1">@app.ServiceName</h5>
+
+                                    <div class="d-flex flex-wrap gap-3 small text-muted my-2">
+                                        <div><i class="fas fa-clock text-teal me-1"></i> <strong class="text-dark">@app.DateTimeStr</strong></div>
+                                        <div><i class="fas fa-user-md text-primary me-1"></i> @app.DoctorName</div>
+                                    </div>
+
+                                    <div class="small text-muted mb-2">
+                                        <i class="fas fa-map-marker-alt text-danger me-1"></i> Địa điểm: <strong class="text-dark">@app.RoomName</strong>
+                                    </div>
+
+                                    @if (!string.IsNullOrEmpty(app.Note))
+                                    {
+                                        <div class="p-2 rounded-3 bg-light border small text-dark mt-2">
+                                            <i class="fas fa-notes-medical text-teal me-1"></i> <em>"@app.Note"</em>
+                                        </div>
+                                    }
+                                </div>
+
+                                <div class="col-md-4 text-center border-start ps-md-4">
+                                    <div class="bg-white p-2 rounded-3 shadow-sm border d-inline-block mb-2">
+                                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=LUNA-TICKET-@app.Id" style="width: 80px; height: 80px;" alt="QR Code" />
+                                    </div>
+                                    <div class="small text-muted font-monospace mb-2">QUÉT TẠI QUẦY</div>
+
+                                    @if (isUpcoming)
+                                    {
+                                        <div class="d-grid gap-1">
+                                            <button class="btn btn-xs btn-outline-danger rounded-pill py-1" onclick="cancelAppointment(@app.Id)">
+                                                <i class="fas fa-times me-1"></i> Hủy / Dời lịch
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Cam kết chất lượng dịch vụ -->
+            <div class="card border-0 rounded-4 shadow-sm p-4 text-white" style="background: linear-gradient(135deg, #0d9488, #115e59);">
+                <div class="d-flex gap-3 align-items-center">
+                    <div class="fs-1 text-warning"><i class="fas fa-hand-holding-heart"></i></div>
+                    <div>
+                        <h6 class="fw-bold mb-1">Cam Kết Trải Nghiệm Chuẩn 5 Sao</h6>
+                        <p class="small text-white-50 mb-0">
+                            Luna Clinic cam kết phục vụ đúng giờ đã đặt, phòng điều trị vô trùng 100% bằng tia UV và dược mỹ phẩm nhập khẩu chính ngạch chuẩn y khoa.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function submitBooking() {
+    const service = document.getElementById('bookService').value;
+    const date = document.getElementById('bookDate').value;
+    const time = document.getElementById('bookTime').value;
+    const doctor = document.getElementById('bookDoctor').value;
+    const note = document.getElementById('bookNote').value;
+    const alertBox = document.getElementById('bookingAlert');
+    const btn = document.getElementById('btnSubmitBooking');
+
+    if (!date) {
+        alert('Vui lòng chọn ngày hẹn!');
+        return;
+    }
+
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Đang tạo vé hẹn...`;
+    btn.disabled = true;
+
+    try {
+        const res = await fetch('/CustomerPortal/BookOnline', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                serviceName: service,
+                bookingDate: date,
+                bookingTime: time,
+                doctorName: doctor,
+                note: note
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alertBox.classList.remove('d-none');
+            alertBox.innerHTML = '<i class="fas fa-check-circle me-1"></i> ' + data.message;
+            setTimeout(() => {
+                location.reload();
+            }, 1200);
+        } else {
+            alert(data.message || 'Lỗi đặt hẹn');
+            btn.innerHTML = `<i class="fas fa-paper-plane me-2"></i> Gửi Yêu Cầu Đặt Lịch Hẹn`;
+            btn.disabled = false;
+        }
+    } catch(err) {
+        console.error(err);
+        alert('Có lỗi xảy ra khi gửi yêu cầu đặt lịch!');
+        btn.innerHTML = `<i class="fas fa-paper-plane me-2"></i> Gửi Yêu Cầu Đặt Lịch Hẹn`;
+        btn.disabled = false;
+    }
+}
+
+async function cancelAppointment(appId) {
+    if (!confirm('Bạn có chắc chắn muốn hủy hoặc dời lịch hẹn này?')) return;
+    try {
+        const res = await fetch('/CustomerPortal/CancelAppointment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ appointmentId: appId })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert(data.message || 'Lỗi hủy hẹn');
+        }
+    } catch(err) {
+        console.error(err);
+        alert('Lỗi kết nối máy chủ');
+    }
+}
+</script>

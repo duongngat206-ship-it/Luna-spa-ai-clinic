@@ -1,0 +1,828 @@
+@model IEnumerable<GiaoDienSpa.Models.Appointment>
+
+@{
+    ViewData["Title"] = "Quản lý lịch hẹn";
+}
+
+<div class="customer-page appointment-page">
+
+    <!-- TIÊU ĐỀ TRANG -->
+    <div class="customer-page-header">
+        <div>
+            <div class="customer-breadcrumb">LUNA SPA / Điều phối lịch hẹn</div>
+            <h1>Quản lý lịch hẹn & Đón tiếp khách hàng</h1>
+            <p>Sắp xếp phòng dịch vụ, phân công chuyên viên, điều phối khách hàng và tự động nhắc lịch AI.</p>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn-approve-quick" id="batchApprovePendingBtn" type="button" title="Quản trị viên duyệt nhanh tất cả lịch hẹn đang ở trạng thái Chờ xác nhận">
+                <span>✓</span> Duyệt tất cả lịch chờ
+            </button>
+            <button class="spa-ai-btn" id="openAiScheduleModal" type="button">
+                <span>✨</span> AI Điều phối phòng & Lịch
+            </button>
+            <button class="customer-primary-btn" id="openAppointmentModal" type="button">
+                <span>＋</span> Thêm lịch hẹn mới
+            </button>
+        </div>
+    </div>
+
+    <!-- 4 THẺ THỐNG KÊ LỊCH HẸN -->
+    <div class="customer-stats">
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-purple">▣</div>
+            <div>
+                <span class="customer-stat-label">Tổng lịch hẹn</span>
+                <strong id="totalAppointments">@ViewBag.TotalAppointments</strong>
+                <small>Lịch hẹn ghi nhận trong ca</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-orange">⏳</div>
+            <div>
+                <span class="customer-stat-label">Chờ xác nhận</span>
+                <strong id="pendingAppointments" style="color: #d88a2c;">@ViewBag.PendingAppointments</strong>
+                <small>Khách đặt hẹn trực tuyến</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-green">✓</div>
+            <div>
+                <span class="customer-stat-label">Đã xác nhận / Trong phòng</span>
+                <strong id="confirmedAppointments" style="color: #278c57;">@ViewBag.ConfirmedAppointments</strong>
+                <small>Đã xếp phòng & KTV</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-blue">★</div>
+            <div>
+                <span class="customer-stat-label">Đã hoàn thành</span>
+                <strong id="completedAppointments" style="color: #4b8bd7;">@ViewBag.CompletedAppointments</strong>
+                <small>Khách hài lòng sau dịch vụ</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI SMART BANNER -->
+    <div class="spa-ai-banner">
+        <div class="spa-ai-banner-left">
+            <div class="spa-ai-icon-pulse">✦</div>
+            <div class="spa-ai-content">
+                <span class="spa-ai-tag">✨ TRỢ LÝ ĐẶT HẸN & ĐIỀU PHỐI PHÒNG LUNA AI</span>
+                <p class="spa-ai-text">
+                    Hệ thống AI đã tự động gửi tin nhắn nhắc hẹn kèm link định vị cho toàn bộ khách hàng hôm nay. Tỷ lệ check-in đúng giờ đạt 96%. Không phát hiện xung đột phòng trị liệu hoặc quá tải chuyên viên.
+                </p>
+            </div>
+        </div>
+        <button class="spa-ai-btn" id="aiScheduleBannerBtn" type="button">Xem công suất phòng AI</button>
+    </div>
+
+    <!-- DANH SÁCH LỊCH HẸN -->
+    <div class="customer-content-card">
+        <div class="customer-content-heading">
+            <div>
+                <h2>Danh sách lịch hẹn LUNA SPA</h2>
+                <p>Theo dõi thời gian, nhân viên phụ trách và trạng thái phục vụ khách.</p>
+            </div>
+            <span class="customer-total-badge" id="appointmentCountBadge">@Model.Count() lịch hẹn</span>
+        </div>
+
+        <div class="customer-toolbar">
+            <div class="customer-search-box">
+                <span>⌕</span>
+                <input type="text" id="appointmentSearch"
+                       placeholder="Tìm theo tên khách, mã lịch, số điện thoại, nhân viên..." />
+            </div>
+
+            <select id="appointmentStatusFilter" class="customer-filter">
+                <option value="">Tất cả trạng thái</option>
+                <option value="Đang phục vụ">Đang phục vụ</option>
+                <option value="Đã xác nhận">Đã xác nhận</option>
+                <option value="Chờ xác nhận">Chờ xác nhận</option>
+                <option value="Đã hoàn thành">Đã hoàn thành</option>
+                <option value="Đã hủy">Đã hủy</option>
+            </select>
+
+            <select id="appointmentRoomFilter" class="customer-filter">
+                <option value="">Tất cả phòng</option>
+                <option value="Laser">Phòng Laser Công nghệ cao</option>
+                <option value="VIP">Phòng Trị liệu VIP</option>
+                <option value="Body">Phòng Thư giãn Body</option>
+                <option value="Y khoa">Phòng Trị mụn Y khoa</option>
+                <option value="Gội">Phòng Gội Dưỡng sinh</option>
+            </select>
+
+            <button class="customer-secondary-btn" id="resetAppointmentFilter" type="button">
+                ↺ Làm mới
+            </button>
+        </div>
+
+        <div class="customer-table-wrap">
+            <table class="customer-table">
+                <thead>
+                    <tr>
+                        <th>MÃ HẸN & GIỜ</th>
+                        <th>KHÁCH HÀNG</th>
+                        <th>DỊCH VỤ TRỊ LIỆU</th>
+                        <th>CHUYÊN VIÊN & PHÒNG</th>
+                        <th>NHẮC LỊCH AI</th>
+                        <th>TRẠNG THÁI</th>
+                        <th class="customer-action-heading">THAO TÁC</th>
+                    </tr>
+                </thead>
+                <tbody id="appointmentTableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="customer-table-footer">
+            <span id="appointmentPageInfo">Hiển thị @Model.Count() lịch hẹn</span>
+            <div class="customer-pagination">
+                <button type="button" disabled>‹</button>
+                <button type="button" class="current-page">1</button>
+                <button type="button" disabled>›</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- MODAL THÊM / SỬA LỊCH HẸN -->
+<div class="customer-modal-backdrop" id="appointmentModal">
+    <div class="customer-modal">
+        <div class="customer-modal-header">
+            <div>
+                <h2 id="appointmentModalTitle">Đặt lịch hẹn trị liệu mới</h2>
+                <p>Chọn dịch vụ, chuyên viên và xếp phòng phù hợp cho khách hàng.</p>
+            </div>
+            <button type="button" class="customer-modal-close" id="closeAppointmentModal">×</button>
+        </div>
+
+        <form id="appointmentForm">
+            <input type="hidden" id="appointmentEditId" />
+
+            <div class="customer-form-grid">
+                <div class="customer-form-group">
+                    <label for="appCustomerName">Tên khách hàng <span>*</span></label>
+                    <input id="appCustomerName" type="text" placeholder="Ví dụ: Nguyễn Minh Anh" required />
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="appCustomerPhone">Số điện thoại <span>*</span></label>
+                    <input id="appCustomerPhone" type="tel" placeholder="Ví dụ: 0987 654 321" required />
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="appServiceName">Dịch vụ điều trị / chăm sóc <span>*</span></label>
+                    <select id="appServiceName" required>
+                        <option value="Trẻ hóa da Laser Pico Pro">Trẻ hóa da Laser Pico Pro (75p)</option>
+                        <option value="Nâng cơ trẻ hóa Hifu Ultra Collagen">Nâng cơ trẻ hóa Hifu Ultra Collagen (90p)</option>
+                        <option value="Chăm sóc da chuyên sâu Aqua Detox">Chăm sóc da chuyên sâu Aqua Detox (60p)</option>
+                        <option value="Trị mụn y khoa & Chiếu ánh sáng sinh học">Trị mụn y khoa & Chiếu ánh sáng sinh học (75p)</option>
+                        <option value="Massage Thảo Dược Cổ Vai Gáy (60p)">Massage Thảo Dược Cổ Vai Gáy (60p)</option>
+                        <option value="Massage Thư Giãn Toàn Thân Đá Nóng">Massage Thư Giãn Toàn Thân Đá Nóng (90p)</option>
+                        <option value="Gội đầu dưỡng sinh Thảo dược Trung Hoa">Gội đầu dưỡng sinh Thảo dược Trung Hoa (45p)</option>
+                    </select>
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="appStaffName">Chuyên viên / Kỹ thuật viên <span>*</span></label>
+                    <select id="appStaffName" required>
+                        <option value="Bác sĩ Lê Hoàng Yến">Bác sĩ Lê Hoàng Yến (Chuyên khoa Da liễu)</option>
+                        <option value="Nguyễn Thu Trang (KTV Trưởng)">Nguyễn Thu Trang (KTV Trưởng)</option>
+                        <option value="Đặng Thùy Dung (KTV)">Đặng Thùy Dung (KTV Massage & Body)</option>
+                        <option value="Vũ Khánh Linh (KTV)">Vũ Khánh Linh (KTV Trị mụn & Peel)</option>
+                        <option value="Lâm Mỹ Duyên (KTV)">Lâm Mỹ Duyên (KTV Gội đầu & Chăm sóc)</option>
+                    </select>
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="appRoomName">Phòng dịch vụ</label>
+                    <select id="appRoomName">
+                        <option value="Phòng Laser Công nghệ cao">Phòng Laser Công nghệ cao (Tầng 2)</option>
+                        <option value="Phòng Trị liệu VIP 01">Phòng Trị liệu VIP 01 (Tầng 1)</option>
+                        <option value="Phòng Thư giãn Body 02">Phòng Thư giãn Body 02 (Tầng 2)</option>
+                        <option value="Phòng Trị mụn Y khoa">Phòng Trị mụn Y khoa (Tầng 1)</option>
+                        <option value="Phòng Gội Dưỡng sinh">Phòng Gội Dưỡng sinh (Tầng 1)</option>
+                    </select>
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="appStatus">Trạng thái lịch hẹn</label>
+                    <select id="appStatus">
+                        <option value="Đã xác nhận">Đã xác nhận</option>
+                        <option value="Chờ xác nhận">Chờ xác nhận</option>
+                        <option value="Đang phục vụ">Đang phục vụ</option>
+                        <option value="Đã hoàn thành">Đã hoàn thành</option>
+                        <option value="Đã hủy">Đã hủy</option>
+                    </select>
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="appDate">Ngày hẹn <span>*</span></label>
+                    <input id="appDate" type="date" required />
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="appTime">Giờ hẹn <span>*</span></label>
+                    <input id="appTime" type="time" value="09:30" required />
+                </div>
+
+                <div class="customer-form-group customer-form-full">
+                    <label for="appNote">Ghi chú yêu cầu của khách</label>
+                    <textarea id="appNote" rows="2" placeholder="Yêu cầu làm phòng riêng, khách có hẹn trước với bác sĩ..."></textarea>
+                </div>
+            </div>
+
+            <div class="customer-modal-footer">
+                <button type="button" class="customer-secondary-btn" id="cancelAppointmentModal">Hủy</button>
+                <button type="submit" class="customer-primary-btn" id="saveAppointmentBtn">Lưu lịch hẹn</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL AI ĐIỀU PHỐI PHÒNG & KIỂM SOÁT TRÙNG LỊCH -->
+<div class="customer-modal-backdrop" id="aiScheduleModal">
+    <div class="customer-modal" style="max-width: 620px;">
+        <div class="customer-modal-header" style="background: linear-gradient(135deg, #fdf8fb 0%, #faedf4 100%);">
+            <div>
+                <span class="spa-ai-tag">✨ TRỢ LÝ ĐIỀU PHỐI PHÒNG LUNA AI</span>
+                <h2 style="color: #985c7e; margin-top: 4px;">Công suất phòng trị liệu & Điều phối tự động</h2>
+                <p>Kiểm soát độ phủ phòng, phòng ngừa trùng lịch và tối ưu thời gian chờ của khách.</p>
+            </div>
+            <button type="button" class="customer-modal-close" id="closeAiScheduleModal">×</button>
+        </div>
+
+        <div style="padding: 22px 25px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px;">
+                <div style="background: #fdfafc; padding: 14px; border-radius: 10px; border: 1px solid #eee7ed;">
+                    <span style="font-size: 11px; color: #8c8296;">Công suất phòng Laser</span>
+                    <strong style="display: block; font-size: 20px; color: #985c7e; margin-top: 3px;">92%</strong>
+                    <small style="color: #d88a2c; font-size: 11px;">Cao điểm 15:30 - 18:30</small>
+                </div>
+                <div style="background: #fdfafc; padding: 14px; border-radius: 10px; border: 1px solid #eee7ed;">
+                    <span style="font-size: 11px; color: #8c8296;">Tỷ lệ trùng lịch</span>
+                    <strong style="display: block; font-size: 20px; color: #278c57; margin-top: 3px;">0% (Hoàn hảo)</strong>
+                    <small style="color: #278c57; font-size: 11px;">Tất cả ca đều giãn cách 15p</small>
+                </div>
+            </div>
+
+            <div style="background: #fdf8fb; border-left: 4px solid #a76d8e; padding: 14px 16px; border-radius: 0 10px 10px 0; margin-bottom: 16px;">
+                <strong style="display: block; font-size: 13px; color: #3b2b4b; margin-bottom: 4px;">
+                    ✦ Lời nhắc điều phối thông minh:
+                </strong>
+                <p style="margin: 0; font-size: 12px; color: #615570; line-height: 1.5;">
+                    Khách VIP Phạm Ngọc Mai (LH-20261027-04) làm dịch vụ Nâng cơ Hifu lúc 16:30. Hãy bật sẵn máy Hifu và pha trà hoa cúc đón khách tại sảnh VIP tầng 2 lúc 16:20.
+                </p>
+            </div>
+
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 12px 14px; font-size: 12px; color: #166534;">
+                ✓ <strong>Hệ thống nhắc hẹn:</strong> Đã gửi xác nhận tự động tới toàn bộ khách hàng. Khách có thể đổi lịch hẹn trước 2 giờ mà không phát sinh phí hủy.
+            </div>
+        </div>
+
+        <div class="customer-modal-footer">
+            <button type="button" class="customer-secondary-btn" id="closeAiScheduleBtn">Đóng</button>
+            <button type="button" class="customer-primary-btn" id="refreshAiScheduleBtn">
+                ↻ Quét lại lịch thời gian thực
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL QUẢN TRỊ VIÊN DUYỆT & QUẢN LÝ TRẠNG THÁI LỊCH HẸN -->
+<div class="customer-modal-backdrop" id="adminStatusModal" style="display:none;">
+    <div class="customer-modal" style="max-width: 580px;">
+        <div class="customer-modal-header" style="background: linear-gradient(135deg, #fdf8fb 0%, #faedf4 100%);">
+            <div>
+                <span class="spa-ai-tag" style="background: #e1f5ea; color: #1e7e48;">🛡 ADMIN APPROVAL WORKFLOW</span>
+                <h2 style="color: #985c7e; margin-top: 4px; font-size: 19px;">Duyệt & Quản lý trạng thái lịch hẹn</h2>
+                <p style="color: #7b6f84; font-size: 12.5px;">Xét duyệt yêu cầu đặt hẹn, phân bổ tài nguyên hoặc chuyển tiếp quy trình phục vụ khách.</p>
+            </div>
+            <button type="button" class="customer-modal-close" id="closeAdminStatusModal">×</button>
+        </div>
+
+        <form id="adminStatusForm" style="padding: 22px;">
+            <input type="hidden" id="statusModalAppId" />
+
+            <!-- THÔNG TIN LỊCH HẸN HIỆN TẠI -->
+            <div style="background: #faf4f8; border: 1px solid #eee1ea; border-radius: 10px; padding: 14px 16px; margin-bottom: 18px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <div>
+                        <strong id="statusModalCustomerName" style="color: #31253d; font-size: 15px;">—</strong>
+                        <div id="statusModalCustomerPhone" style="font-size: 12px; color: #8e8096; margin-top: 2px;">—</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <span id="statusModalCode" style="font-family: monospace; font-size: 12px; font-weight: 700; color: #985c7e; background: #fff; padding: 3px 8px; border-radius: 6px; border: 1px solid #e2d1dd;">—</span>
+                        <div id="statusModalCurrentStatus" style="font-size: 11px; margin-top: 4px; font-weight: 600;">—</div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; color: #534563; border-top: 1px dashed #e5d7e2; padding-top: 8px; margin-top: 8px;">
+                    <div>✦ <strong>Dịch vụ:</strong> <span id="statusModalService">—</span></div>
+                    <div>◷ <strong>Thời gian:</strong> <span id="statusModalDateTime">—</span></div>
+                    <div>👩‍⚕️ <strong>Kỹ thuật viên:</strong> <span id="statusModalStaff">—</span></div>
+                    <div>📍 <strong>Phòng:</strong> <span id="statusModalRoom">—</span></div>
+                </div>
+            </div>
+
+            <!-- BỘ CHỌN TRẠNG THÁI (RADIO CARDS) -->
+            <label style="display: block; font-size: 13px; font-weight: 700; color: #352745; margin-bottom: 8px;">
+                Chọn trạng thái xét duyệt của Quản trị viên: <span style="color: #d13b68;">*</span>
+            </label>
+            <div class="status-radio-grid" id="statusRadioOptions">
+                <div class="status-radio-card" data-val="Đã xác nhận">
+                    <span class="status-radio-icon">✓</span>
+                    <strong class="status-radio-title" style="color: #278c57;">Đã xác nhận</strong>
+                    <span class="status-radio-desc">Duyệt & giữ chỗ</span>
+                </div>
+
+                <div class="status-radio-card" data-val="Đang phục vụ">
+                    <span class="status-radio-icon">◷</span>
+                    <strong class="status-radio-title" style="color: #985c7e;">Đang phục vụ</strong>
+                    <span class="status-radio-desc">Trong phòng trị liệu</span>
+                </div>
+
+                <div class="status-radio-card" data-val="Đã hoàn thành">
+                    <span class="status-radio-icon">★</span>
+                    <strong class="status-radio-title" style="color: #2b7bc5;">Đã hoàn thành</strong>
+                    <span class="status-radio-desc">Chuyển thu ngân</span>
+                </div>
+
+                <div class="status-radio-card" data-val="Chờ xác nhận">
+                    <span class="status-radio-icon">⌛</span>
+                    <strong class="status-radio-title" style="color: #d88a2c;">Chờ xác nhận</strong>
+                    <span class="status-radio-desc">Chờ liên hệ lại</span>
+                </div>
+
+                <div class="status-radio-card" data-val="Đã hủy">
+                    <span class="status-radio-icon">✕</span>
+                    <strong class="status-radio-title" style="color: #a097a8;">Đã hủy</strong>
+                    <span class="status-radio-desc">Khách hủy / Vắng</span>
+                </div>
+            </div>
+            <input type="hidden" id="selectedStatusInput" value="Đã xác nhận" />
+
+            <!-- GHI CHÚ DUYỆT CỦA ADMIN -->
+            <div style="margin-bottom: 14px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label for="statusModalAdminNote" style="font-size: 13px; font-weight: 600; color: #3b2e47;">
+                        Ghi chú duyệt của Quản trị viên
+                    </label>
+                    <span style="font-size: 11px; color: #958a9f;">Tùy chọn</span>
+                </div>
+                <textarea id="statusModalAdminNote" rows="2" placeholder="Ví dụ: Đã gọi điện thoại xác nhận với khách, chuẩn bị phòng Laser trước 15 phút..." style="width: 100%; padding: 8px 12px; border: 1.5px solid #d8cad6; border-radius: 8px; font-size: 13px; resize: vertical;"></textarea>
+                
+                <!-- Quick chips gợi ý ghi chú -->
+                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;">
+                    <button type="button" class="status-quick-note-chip" data-text="Đã gọi điện xác nhận với khách">📞 Đã gọi xác nhận</button>
+                    <button type="button" class="status-quick-note-chip" data-text="Khách VIP - ưu tiên phục vụ chuẩn 5 sao">👑 Khách VIP ưu tiên</button>
+                    <button type="button" class="status-quick-note-chip" data-text="Khách xin lùi lại 15 phút nếu kẹt xe">⏰ Dời 15 phút</button>
+                    <button type="button" class="status-quick-note-chip" data-text="Đã sắp xếp đúng KTV theo yêu cầu">👩‍⚕️ Đúng KTV yêu cầu</button>
+                </div>
+            </div>
+
+            <!-- NOTIFICATION CHECKBOX -->
+            <div style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #fbf7fa; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ebdbe6;">
+                <input type="checkbox" id="statusModalSendNotification" checked style="width: 16px; height: 16px; accent-color: #985c7e; cursor: pointer;" />
+                <label for="statusModalSendNotification" style="font-size: 12.5px; color: #4e3f5b; cursor: pointer; user-select: none;">
+                    Tự động kích hoạt bot AI gửi tin nhắn Zalo/SMS cập nhật trạng thái cho khách hàng
+                </label>
+            </div>
+
+            <div class="customer-modal-actions" style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="customer-secondary-btn" id="cancelAdminStatusModal">Đóng</button>
+                <button type="submit" class="customer-primary-btn" id="submitAdminStatusBtn" style="background: linear-gradient(135deg, #a76d8e 0%, #8e5476 100%); color: #fff; font-weight: 600; padding: 10px 24px; border-radius: 8px; border: none; cursor: pointer;">
+                    ✓ Lưu & Cập nhật trạng thái
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let appointments = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }));
+
+    const tableBody = document.getElementById("appointmentTableBody");
+    const modal = document.getElementById("appointmentModal");
+    const form = document.getElementById("appointmentForm");
+    const aiScheduleModal = document.getElementById("aiScheduleModal");
+
+    // Đặt mặc định ngày hẹn = hôm nay
+    document.getElementById("appDate").value = new Date().toISOString().split("T")[0];
+
+    function escapeHtml(val) {
+        return String(val ?? "").replace(/[&<>"']/g, function (c) {
+            return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[c];
+        });
+    }
+
+    function renderAppointments() {
+        const keyword = document.getElementById("appointmentSearch").value.trim().toLowerCase();
+        const status = document.getElementById("appointmentStatusFilter").value;
+        const room = document.getElementById("appointmentRoomFilter").value.toLowerCase();
+
+        const filtered = appointments.filter(a => {
+            const matchKeyword =
+                a.customerName.toLowerCase().includes(keyword) ||
+                (a.appointmentCode && a.appointmentCode.toLowerCase().includes(keyword)) ||
+                a.customerPhone.toLowerCase().includes(keyword) ||
+                a.serviceName.toLowerCase().includes(keyword) ||
+                a.staffName.toLowerCase().includes(keyword);
+
+            const matchStatus = !status || a.status === status;
+            const matchRoom = !room || a.roomName.toLowerCase().includes(room);
+
+            return matchKeyword && matchStatus && matchRoom;
+        });
+
+        tableBody.innerHTML = "";
+
+        if (filtered.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="customer-empty">
+                        Không tìm thấy lịch hẹn phù hợp.
+                    </td>
+                </tr>`;
+        } else {
+            filtered.forEach(a => {
+                const initials = a.customerName.trim().split(/\s+/).slice(-2)
+                    .map(w => w.charAt(0)).join("").toUpperCase();
+
+                let statusBadgeClass = "status-active";
+                if (a.status === "Đang phục vụ") statusBadgeClass = "status-inservice";
+                else if (a.status === "Chờ xác nhận") statusBadgeClass = "status-pending";
+                else if (a.status === "Đã hoàn thành") statusBadgeClass = "status-active";
+                else if (a.status === "Đã hủy") statusBadgeClass = "status-inactive";
+
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>
+                        <strong style="color: #985c7e; font-size: 14px; font-family: monospace;">${escapeHtml(a.appointmentTime)}</strong>
+                        <div style="font-size: 11px; color: #958a9f; margin-top: 2px;">${escapeHtml(a.appointmentCode || ('LH-' + a.appointmentId))}</div>
+                    </td>
+                    <td>
+                        <div class="customer-person">
+                            <div class="customer-avatar">${escapeHtml(initials)}</div>
+                            <div>
+                                <strong style="color:#352b44;">${escapeHtml(a.customerName)}</strong>
+                                <small>${escapeHtml(a.customerPhone || '—')}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <strong style="color:#3e2f50; font-size:12px;">${escapeHtml(a.serviceName)}</strong>
+                        <small style="display:block; color:#958a9f; font-size:11px;">◷ ${a.durationMinutes || 60} phút liệu trình</small>
+                    </td>
+                    <td>
+                        <div style="font-size:12px; font-weight:600; color:#443857;">${escapeHtml(a.staffName)}</div>
+                        <span class="room-badge" style="margin-top:3px;">📍 ${escapeHtml(a.roomName)}</span>
+                    </td>
+                    <td>
+                        <span style="font-size:11px; color:#685878; background:#fbf5fa; padding:3px 7px; border-radius:5px; border:1px solid #ebdfe8;">
+                            💬 ${escapeHtml(a.aiReminderStatus || 'Đã gửi SMS')}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
+                            <span class="customer-status ${statusBadgeClass}" data-action="status-modal" data-id="${a.appointmentId}" style="cursor: pointer;" title="Quản trị viên: Bấm để duyệt hoặc đổi trạng thái">
+                                <i></i>${escapeHtml(a.status)} ⚙
+                            </span>
+                            ${a.status === 'Chờ xác nhận' ? `
+                                <button type="button" class="btn-approve-quick" data-action="quick-approve" data-id="${a.appointmentId}" title="Duyệt lịch hẹn này ngay lập tức">
+                                    ✓ Duyệt ngay
+                                </button>
+                            ` : ''}
+                            ${a.adminApprovalNote ? `
+                                <small style="font-size: 10px; color: #8e5476; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="Ghi chú Quản trị viên: ${escapeHtml(a.adminApprovalNote)}">
+                                    ✎ ${escapeHtml(a.adminApprovalNote)}
+                                </small>
+                            ` : ''}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="customer-row-actions">
+                            <button type="button" class="btn-status-manage" title="Quản trị viên duyệt & đổi trạng thái" data-action="status-modal" data-id="${a.appointmentId}">
+                                ⚙ Duyệt
+                            </button>
+                            <button type="button" title="Chỉnh sửa lịch hẹn" data-action="edit" data-id="${a.appointmentId}">✎</button>
+                            <button type="button" title="Hủy lịch hẹn" data-action="delete" data-id="${a.appointmentId}">⌫</button>
+                        </div>
+                    </td>`;
+                tableBody.appendChild(row);
+            });
+        }
+
+        const pending = appointments.filter(a => a.status === "Chờ xác nhận").length;
+        const confirmed = appointments.filter(a => a.status === "Đã xác nhận" || a.status === "Đang phục vụ").length;
+        const completed = appointments.filter(a => a.status === "Đã hoàn thành").length;
+
+        document.getElementById("totalAppointments").textContent = appointments.length;
+        document.getElementById("pendingAppointments").textContent = pending;
+        document.getElementById("confirmedAppointments").textContent = confirmed;
+        document.getElementById("completedAppointments").textContent = completed;
+
+        document.getElementById("appointmentCountBadge").textContent = `${filtered.length} lịch hẹn`;
+        document.getElementById("appointmentPageInfo").textContent = `Đang hiển thị ${filtered.length} trong tổng số ${appointments.length} lịch hẹn`;
+    }
+
+    function openModal(app = null) {
+        form.reset();
+        document.getElementById("appointmentEditId").value = "";
+        document.getElementById("appointmentModalTitle").textContent = app ? "Chỉnh sửa lịch hẹn" : "Đặt lịch hẹn mới";
+
+        if (app) {
+            document.getElementById("appointmentEditId").value = app.appointmentId;
+            document.getElementById("appCustomerName").value = app.customerName;
+            document.getElementById("appCustomerPhone").value = app.customerPhone;
+            document.getElementById("appServiceName").value = app.serviceName;
+            document.getElementById("appStaffName").value = app.staffName;
+            document.getElementById("appRoomName").value = app.roomName;
+            document.getElementById("appStatus").value = app.status;
+            document.getElementById("appTime").value = app.appointmentTime;
+            document.getElementById("appNote").value = app.note || "";
+        }
+
+        modal.classList.add("show");
+    }
+
+    function closeModal() {
+        modal.classList.remove("show");
+    }
+
+    document.getElementById("openAppointmentModal").addEventListener("click", () => openModal());
+    document.getElementById("closeAppointmentModal").addEventListener("click", closeModal);
+    document.getElementById("cancelAppointmentModal").addEventListener("click", closeModal);
+    modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+
+    // AI Schedule Modal
+    document.getElementById("openAiScheduleModal").addEventListener("click", () => aiScheduleModal.classList.add("show"));
+    document.getElementById("aiScheduleBannerBtn").addEventListener("click", () => aiScheduleModal.classList.add("show"));
+    document.getElementById("closeAiScheduleModal").addEventListener("click", () => aiScheduleModal.classList.remove("show"));
+    document.getElementById("closeAiScheduleBtn").addEventListener("click", () => aiScheduleModal.classList.remove("show"));
+    document.getElementById("refreshAiScheduleBtn").addEventListener("click", function() {
+        alert("Đã hoàn tất rà soát phòng trị liệu: 100% phòng và thiết bị đều sẵn sàng đón tiếp khách!");
+        aiScheduleModal.classList.remove("show");
+    });
+    aiScheduleModal.addEventListener("click", e => { if (e.target === aiScheduleModal) aiScheduleModal.classList.remove("show"); });
+
+    // Filter
+    document.getElementById("appointmentSearch").addEventListener("input", renderAppointments);
+    document.getElementById("appointmentStatusFilter").addEventListener("change", renderAppointments);
+    document.getElementById("appointmentRoomFilter").addEventListener("change", renderAppointments);
+    document.getElementById("resetAppointmentFilter").addEventListener("click", function() {
+        document.getElementById("appointmentSearch").value = "";
+        document.getElementById("appointmentStatusFilter").value = "";
+        document.getElementById("appointmentRoomFilter").value = "";
+        renderAppointments();
+    });
+
+    // Form submit
+    form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const editId = document.getElementById("appointmentEditId").value;
+        const appData = {
+            appointmentId: editId ? Number(editId) : 0,
+            customerName: document.getElementById("appCustomerName").value.trim(),
+            customerPhone: document.getElementById("appCustomerPhone").value.trim(),
+            serviceName: document.getElementById("appServiceName").value,
+            staffName: document.getElementById("appStaffName").value,
+            roomName: document.getElementById("appRoomName").value,
+            status: document.getElementById("appStatus").value,
+            appointmentTime: document.getElementById("appTime").value,
+            appointmentDate: document.getElementById("appDate").value,
+            durationMinutes: 60,
+            note: document.getElementById("appNote").value.trim()
+        };
+
+        if (editId) {
+            const index = appointments.findIndex(a => a.appointmentId === Number(editId));
+            if (index !== -1) {
+                appData.appointmentCode = appointments[index].appointmentCode;
+                appData.aiReminderStatus = appointments[index].aiReminderStatus;
+                appointments[index] = appData;
+            }
+        } else {
+            const newId = appointments.length ? Math.max(...appointments.map(a => a.appointmentId)) + 1 : 1;
+            appData.appointmentId = newId;
+            appData.appointmentCode = "LH-" + new Date().toISOString().slice(0, 10).replace(/-/g, "") + "-" + String(newId).padStart(2, "0");
+            appData.aiReminderStatus = "Hệ thống AI vừa gửi tin nhắn Zalo xác nhận";
+            appointments.unshift(appData);
+        }
+
+        closeModal();
+        renderAppointments();
+    });
+
+    // Table click actions
+    tableBody.addEventListener("click", function (e) {
+        const target = e.target.closest("[data-action]");
+        if (!target) return;
+
+        const id = Number(target.dataset.id);
+        const app = appointments.find(a => a.appointmentId === id);
+        if (!app) return;
+
+        const action = target.dataset.action;
+
+        if (action === "quick-approve") {
+            // Duyệt ngay: chuyển sang Đã xác nhận
+            app.status = "Đã xác nhận";
+            app.approvedBy = "Quản trị viên";
+            app.approvedAt = new Date().toISOString();
+            app.aiReminderStatus = "Admin đã duyệt • Đã xếp phòng & gửi SMS";
+
+            renderAppointments();
+
+            // Gửi API cập nhật trạng thái
+            fetch(`/Appointments/UpdateStatus?id=${id}&status=${encodeURIComponent("Đã xác nhận")}`, {
+                method: "POST"
+            }).then(() => {
+                if (window.showLunaToast) {
+                    window.showLunaToast(`✓ Đã duyệt lịch hẹn "${app.appointmentCode}" của ${app.customerName}!`, "success");
+                }
+            }).catch(err => console.error("Lỗi duyệt lịch hẹn:", err));
+
+        } else if (action === "status-modal") {
+            openAdminStatusModal(app);
+        } else if (action === "edit") {
+            openModal(app);
+        } else if (action === "delete") {
+            if (confirm(`Bạn có chắc muốn hủy lịch hẹn "${app.appointmentCode}" của khách hàng "${app.customerName}"?`)) {
+                fetch(`/Appointments/UpdateStatus?id=${id}&status=${encodeURIComponent("Đã hủy")}&note=${encodeURIComponent("Quản trị viên đã xóa lịch hẹn")}`, {
+                    method: "POST"
+                }).catch(err => console.error(err));
+
+                appointments = appointments.filter(a => a.appointmentId !== id);
+                renderAppointments();
+
+                if (window.showLunaToast) {
+                    window.showLunaToast(`✓ Đã hủy lịch hẹn "${app.appointmentCode}"!`, "success");
+                }
+            }
+        }
+    });
+
+    // ==========================================
+    // LOGIC MODAL QUẢN TRỊ VIÊN DUYỆT TRẠNG THÁI
+    // ==========================================
+    const adminStatusModal = document.getElementById("adminStatusModal");
+    const adminStatusForm = document.getElementById("adminStatusForm");
+    const closeAdminStatusModal = document.getElementById("closeAdminStatusModal");
+    const cancelAdminStatusModal = document.getElementById("cancelAdminStatusModal");
+    const statusRadioCards = document.querySelectorAll(".status-radio-card");
+    const selectedStatusInput = document.getElementById("selectedStatusInput");
+    const statusModalAdminNote = document.getElementById("statusModalAdminNote");
+
+    function openAdminStatusModal(app) {
+        document.getElementById("statusModalAppId").value = app.appointmentId;
+        document.getElementById("statusModalCustomerName").textContent = app.customerName;
+        document.getElementById("statusModalCustomerPhone").textContent = app.customerPhone || "Chưa có SĐT";
+        document.getElementById("statusModalCode").textContent = app.appointmentCode || ('LH-' + app.appointmentId);
+        document.getElementById("statusModalCurrentStatus").textContent = "Hiện tại: " + app.status;
+        document.getElementById("statusModalService").textContent = app.serviceName;
+        document.getElementById("statusModalDateTime").textContent = `${app.appointmentTime} - Hôm nay`;
+        document.getElementById("statusModalStaff").textContent = app.staffName;
+        document.getElementById("statusModalRoom").textContent = app.roomName;
+
+        statusModalAdminNote.value = app.adminApprovalNote || "";
+        selectedStatusInput.value = app.status;
+
+        statusRadioCards.forEach(card => {
+            if (card.getAttribute("data-val") === app.status) {
+                card.classList.add("selected");
+            } else {
+                card.classList.remove("selected");
+            }
+        });
+
+        adminStatusModal.style.display = "grid";
+    }
+
+    function closeStatusModal() {
+        adminStatusModal.style.display = "none";
+    }
+
+    if (closeAdminStatusModal) closeAdminStatusModal.addEventListener("click", closeStatusModal);
+    if (cancelAdminStatusModal) cancelAdminStatusModal.addEventListener("click", closeStatusModal);
+    adminStatusModal.addEventListener("click", function(e) {
+        if (e.target === adminStatusModal) closeStatusModal();
+    });
+
+    // Chọn trạng thái bằng card
+    statusRadioCards.forEach(card => {
+        card.addEventListener("click", function () {
+            statusRadioCards.forEach(c => c.classList.remove("selected"));
+            this.classList.add("selected");
+            selectedStatusInput.value = this.getAttribute("data-val");
+        });
+    });
+
+    // Quick chips gợi ý ghi chú
+    document.querySelectorAll(".status-quick-note-chip").forEach(chip => {
+        chip.addEventListener("click", function () {
+            const text = this.getAttribute("data-text");
+            if (statusModalAdminNote.value) {
+                statusModalAdminNote.value += " • " + text;
+            } else {
+                statusModalAdminNote.value = text;
+            }
+            statusModalAdminNote.focus();
+        });
+    });
+
+    // Submit form duyệt trạng thái
+    adminStatusForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const id = Number(document.getElementById("statusModalAppId").value);
+        const newStatus = selectedStatusInput.value;
+        const note = statusModalAdminNote.value.trim();
+
+        const app = appointments.find(a => a.appointmentId === id);
+        if (!app) return;
+
+        app.status = newStatus;
+        app.adminApprovalNote = note;
+        app.approvedBy = "Quản trị viên";
+        app.approvedAt = new Date().toISOString();
+
+        if (newStatus === "Đã xác nhận") {
+            app.aiReminderStatus = "Admin đã duyệt • Đã xếp phòng & gửi SMS";
+        } else if (newStatus === "Đang phục vụ") {
+            app.aiReminderStatus = "Khách đang trong phòng trị liệu";
+        } else if (newStatus === "Đã hoàn thành") {
+            app.aiReminderStatus = "Hoàn tất liệu trình • Chuyển thu ngân";
+        } else if (newStatus === "Đã hủy") {
+            app.aiReminderStatus = "Lịch đã hủy bởi Quản trị viên";
+        }
+
+        renderAppointments();
+        closeStatusModal();
+
+        try {
+            await fetch(`/Appointments/UpdateStatus?id=${id}&status=${encodeURIComponent(newStatus)}&note=${encodeURIComponent(note)}`, {
+                method: "POST"
+            });
+        } catch (err) {
+            console.error("Lỗi cập nhật trạng thái:", err);
+        }
+
+        if (window.showLunaToast) {
+            window.showLunaToast(`✓ Quản trị viên đã cập nhật trạng thái: "${newStatus}"!`, "success");
+        }
+    });
+
+    // Duyệt hàng loạt tất cả các lịch đang chờ xác nhận
+    const batchBtn = document.getElementById("batchApprovePendingBtn");
+    if (batchBtn) {
+        batchBtn.addEventListener("click", async function () {
+            const pendingList = appointments.filter(a => a.status === "Chờ xác nhận");
+            if (pendingList.length === 0) {
+                if (window.showLunaToast) {
+                    window.showLunaToast("ℹ Hiện tại không có lịch hẹn nào đang ở trạng thái 'Chờ xác nhận'.", "warning");
+                } else {
+                    alert("Hiện không có lịch hẹn nào đang chờ duyệt.");
+                }
+                return;
+            }
+
+            if (!confirm(`Bạn có chắc muốn Quản trị viên duyệt toàn bộ ${pendingList.length} lịch hẹn đang chờ sang trạng thái "Đã xác nhận"?`)) {
+                return;
+            }
+
+            const ids = pendingList.map(a => a.appointmentId);
+            pendingList.forEach(a => {
+                a.status = "Đã xác nhận";
+                a.approvedBy = "Quản trị viên";
+                a.approvedAt = new Date().toISOString();
+                a.aiReminderStatus = "Admin đã duyệt hàng loạt • Đã xếp phòng";
+            });
+
+            renderAppointments();
+
+            try {
+                await fetch('/Appointments/BatchApprove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ids: ids, status: "Đã xác nhận", note: "Quản trị viên duyệt nhanh hàng loạt" })
+                });
+            } catch (err) {
+                console.error("Lỗi duyệt hàng loạt:", err);
+            }
+
+            if (window.showLunaToast) {
+                window.showLunaToast(`✓ Đã duyệt thành công tất cả ${ids.length} lịch hẹn đang chờ!`, "success");
+            }
+        });
+    }
+
+    renderAppointments();
+</script>
+}

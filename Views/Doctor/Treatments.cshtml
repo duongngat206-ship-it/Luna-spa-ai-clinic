@@ -1,0 +1,61 @@
+@model IEnumerable<GiaoDienSpa.Controllers.DoctorPatientRecord>
+@{
+    ViewData["Title"] = "Phác Đồ Điều Trị Công Nghệ Cao";
+}
+
+<div class="customer-page">
+    <div class="customer-page-header">
+        <div>
+            <div class="customer-breadcrumb">
+                <a asp-controller="Doctor" asp-action="Dashboard" style="text-decoration:none; color:inherit;">🩺 Bác sĩ</a> / Phác đồ điều trị
+            </div>
+            <h1>Danh Mục Phác Đồ Lâm Sàng Laser & Công Nghệ Cao</h1>
+            <p>Quy chuẩn phác đồ thẩm mỹ y khoa, mức năng lượng và thời gian phục hồi theo tiêu chuẩn Bộ Y Tế.</p>
+        </div>
+
+        <button class="customer-primary-btn" style="background: #2b7bb9;" onclick="alert('Mở form tạo phác đồ lâm sàng mới!')">
+            <span>＋</span> Tạo Phác Đồ Mới
+        </button>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; margin-top: 14px;">
+        <div class="customer-table-card" style="padding: 22px; border-top: 4px solid #2b7bb9;">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <span class="service-badge-pill" style="background: #e8f3fb; color: #2b7bb9;">Laser Pico Dual Wave</span>
+                <span style="font-size: 13px; font-weight: 700; color: #1e3a58;">2.500.000 đ</span>
+            </div>
+            <h3 style="margin: 12px 0 6px; font-size: 17px; color: #1e293b;">Trẻ Hóa Da & Xóa Nám Pico Pro</h3>
+            <p style="font-size: 12.5px; color: #64748b; line-height: 1.5;">Bước sóng kép 1064nm & 532nm phá vỡ sắc tố melanin siêu mịn không tổn thương biểu bì. Thời gian nghỉ dưỡng: 0 ngày.</p>
+            <div style="margin-top: 14px; font-size: 12px; color: #475569; background: #f8fafc; padding: 10px; border-radius: 8px;">
+                • <strong>Số buổi khuyến nghị:</strong> 4 - 6 buổi (mỗi buổi cách nhau 14 ngày)<br />
+                • <strong>Chỉ định:</strong> Nám mảng, tàn nhang, đốm nâu, sẹo thâm sau mụn.
+            </div>
+        </div>
+
+        <div class="customer-table-card" style="padding: 22px; border-top: 4px solid #985c7e;">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <span class="service-badge-pill" style="background: #fdf2f8; color: #985c7e;">Hifu Ultra Collagen</span>
+                <span style="font-size: 13px; font-weight: 700; color: #985c7e;">3.800.000 đ</span>
+            </div>
+            <h3 style="margin: 12px 0 6px; font-size: 17px; color: #1e293b;">Nâng Cơ & Tái Tạo Cân Cơ SMAS</h3>
+            <p style="font-size: 12.5px; color: #64748b; line-height: 1.5;">Sóng siêu âm hội tụ vi điểm tác động sâu 4.5mm lớp cân cơ SMAS, định hình viền hàm V-line và xóa rãnh cười.</p>
+            <div style="margin-top: 14px; font-size: 12px; color: #475569; background: #f8fafc; padding: 10px; border-radius: 8px;">
+                • <strong>Số buổi khuyến nghị:</strong> 1 - 2 buổi / năm<br />
+                • <strong>Chỉ định:</strong> Da chảy xệ, chùng nhão, nếp nhăn đuôi mắt và rãnh cười sâu.
+            </div>
+        </div>
+
+        <div class="customer-table-card" style="padding: 22px; border-top: 4px solid #3da58a;">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <span class="service-badge-pill" style="background: #eef7f4; color: #1d7b63;">Chemical Peel Y Khoa</span>
+                <span style="font-size: 13px; font-weight: 700; color: #1d7b63;">850.000 đ</span>
+            </div>
+            <h3 style="margin: 12px 0 6px; font-size: 17px; color: #1e293b;">Peel Đa Tầng BHA 20% & AHA 30%</h3>
+            <p style="font-size: 12.5px; color: #64748b; line-height: 1.5;">Thanh lọc sừng già cỗi, gom cồi mụn ẩn, thu nhỏ lỗ chân lông và làm đều màu bề mặt da tức thì.</p>
+            <div style="margin-top: 14px; font-size: 12px; color: #475569; background: #f8fafc; padding: 10px; border-radius: 8px;">
+                • <strong>Số buổi khuyến nghị:</strong> 3 - 5 buổi (cách nhau 21 ngày)<br />
+                • <strong>Chỉ định:</strong> Da dầu mụn, bít tắc tuyến bã nhờn, da xỉn màu sần sùi.
+            </div>
+        </div>
+    </div>
+</div>

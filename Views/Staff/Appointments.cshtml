@@ -1,0 +1,151 @@
+@model List<GiaoDienSpa.Controllers.StaffAppointmentTask>
+@{
+    ViewData["Title"] = "Lịch Trình & Quy Trình Ca Phục Vụ Của Kỹ Thuật Viên";
+}
+
+<div class="staff-appointments-page">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="fas fa-calendar-check text-teal me-2"></i> Lịch Ca & Quy Trình Kỹ Thuật Trị Liệu</h3>
+            <p class="text-muted mb-0">Theo dõi checklist các bước thực hiện liệu trình và ghi nhận hoàn tất ca phục vụ</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Staff/Dashboard" class="btn btn-outline-secondary rounded-pill px-3">
+                <i class="fas fa-arrow-left me-1"></i> Bàn làm việc KTV
+            </a>
+            <a href="/Staff/CheckIn" class="btn btn-teal rounded-pill px-3">
+                <i class="fas fa-user-plus me-1"></i> Tiếp đón khách mới
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 rounded-4 shadow-sm p-4 bg-white">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-0">Ca Trực: KTV. @ViewBag.StaffName</h5>
+                        <div class="small text-muted">Hôm nay, @DateTime.Now.ToString("dd/MM/yyyy") (Ca Sáng & Chiều)</div>
+                    </div>
+                    <span class="badge bg-teal text-white rounded-pill px-3 py-2">
+                        <i class="fas fa-clipboard-check me-1"></i> @Model.Count(t => t.Status == "Đã hoàn thành") / @Model.Count ca hoàn tất
+                    </span>
+                </div>
+
+                <div class="d-flex flex-column gap-3 mt-3">
+                    @foreach (var task in Model)
+                    {
+                        var statusBorder = task.Status switch
+                        {
+                            "Đã hoàn thành" => "border-success bg-light",
+                            "Đang thực hiện" => "border-primary bg-white shadow-sm",
+                            "Sắp diễn ra" => "border-warning bg-light",
+                            _ => "border-secondary bg-light"
+                        };
+
+                        var badgeClass = task.Status switch
+                        {
+                            "Đã hoàn thành" => "bg-success text-white",
+                            "Đang thực hiện" => "bg-primary text-white",
+                            "Sắp diễn ra" => "bg-warning text-dark",
+                            _ => "bg-secondary text-white"
+                        };
+
+                        <div class="p-3 rounded-4 border-start border-4 @statusBorder border position-relative" id="task-card-@task.Id">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <span class="badge @badgeClass rounded-pill px-3 py-1 mb-1">@task.Status</span>
+                                    <h6 class="fw-bold text-dark mb-0 fs-6">
+                                        @task.CustomerName <span class="text-muted fw-normal small">(@task.Phone)</span>
+                                    </h6>
+                                </div>
+                                <div class="text-end">
+                                    <span class="fw-bold text-teal font-monospace"><i class="fas fa-clock me-1"></i> @task.TimeSlot</span>
+                                    <div class="small text-muted"><i class="fas fa-map-marker-alt text-danger me-1"></i> @task.RoomBed</div>
+                                </div>
+                            </div>
+
+                            <div class="text-teal fw-semibold small mb-2">
+                                <i class="fas fa-spa me-1"></i> Dịch vụ: @task.ServiceName
+                            </div>
+
+                            <!-- Protocol Steps Checklist -->
+                            <div class="p-2 rounded-3 bg-light border small text-dark mb-3">
+                                <div class="fw-bold text-secondary mb-1"><i class="fas fa-list-ol text-teal me-1"></i> Quy trình chuẩn 4 bước:</div>
+                                <div>@task.ProtocolSteps</div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="w-50">
+                                    <div class="d-flex justify-content-between small text-muted mb-1">
+                                        <span>Tiến độ thực hiện:</span>
+                                        <span class="fw-bold" id="pct-@task.Id">@task.ProgressPercent%</span>
+                                    </div>
+                                    <div class="progress rounded-pill" style="height: 6px;">
+                                        <div class="progress-bar bg-teal" id="bar-@task.Id" style="width: @task.ProgressPercent%"></div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    @if (task.Status != "Đã hoàn thành")
+                                    {
+                                        <button class="btn btn-sm btn-teal rounded-pill px-3 fw-bold" onclick="completeTask(@task.Id)">
+                                            <i class="fas fa-check-circle me-1"></i> Hoàn tất ca & Tính hoa hồng
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-success small fw-bold"><i class="fas fa-check-double me-1"></i> Đã hoàn tất ✓</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 rounded-4 shadow-sm p-4 bg-white mb-4">
+                <h5 class="fw-bold mb-3"><i class="fas fa-clipboard-list text-teal me-2"></i> Lưu Ý Chuẩn Bị Ca Trực</h5>
+                <ul class="list-unstyled d-flex flex-column gap-2 small mb-0">
+                    <li class="p-2 rounded-3 bg-light"><i class="fas fa-check text-success me-2"></i> Vệ sinh và bật đèn UV khử khuẩn phòng VIP 01 trước 15p.</li>
+                    <li class="p-2 rounded-3 bg-light"><i class="fas fa-check text-success me-2"></i> Kiểm tra nhiệt độ tủ giữ ấm khăn mặt luôn ở 45°C.</li>
+                    <li class="p-2 rounded-3 bg-light"><i class="fas fa-check text-success me-2"></i> Lấy sẵn Serum HA B5 và kem chống nắng khoáng tại kho vật tư.</li>
+                    <li class="p-2 rounded-3 bg-light"><i class="fas fa-check text-success me-2"></i> Mời khách uống trà thảo mộc đông trùng hạ thảo sau khi hoàn thành.</li>
+                </ul>
+            </div>
+
+            <div class="card border-0 rounded-4 shadow-sm p-4 text-white" style="background: linear-gradient(135deg, #0d9488, #134e4a);">
+                <h5 class="fw-bold mb-2"><i class="fas fa-headset me-2"></i> Cần Hỗ Trợ Chuyên Môn?</h5>
+                <p class="small text-white-50 mb-3">Liên hệ ngay Bác sĩ trực lâm sàng để kiểm tra làn da phản ứng hoặc tư vấn phác đồ phát sinh.</p>
+                <a href="/Doctor/Dashboard" class="btn btn-warning fw-bold rounded-pill w-100">
+                    <i class="fas fa-user-md me-1"></i> Kết Nối Bác Sĩ Lâm Sàng
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function completeTask(taskId) {
+    if (!confirm('Xác nhận hoàn tất ca chăm sóc cho khách hàng này?')) return;
+    try {
+        const res = await fetch('/Staff/CompleteTask', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ taskId: taskId })
+        });
+        const data = await res.json();
+        if (data.success) {
+            window.showLunaToast ? window.showLunaToast(data.message, "success") : alert(data.message);
+            setTimeout(() => location.reload(), 800);
+        } else {
+            alert(data.message || 'Lỗi xử lý');
+        }
+    } catch(err) {
+        console.error(err);
+        alert('Lỗi kết nối máy chủ');
+    }
+}
+</script>

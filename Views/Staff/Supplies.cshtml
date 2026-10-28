@@ -1,0 +1,127 @@
+@model List<GiaoDienSpa.Controllers.StaffSupplyItem>
+@{
+    ViewData["Title"] = "Quản Lý & Yêu Cầu Vật Tư Tiêu Hao Buồng Phòng";
+}
+
+<div class="staff-supplies-page">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="fas fa-boxes text-teal me-2"></i> Kho Vật Tư Tiêu Hao Buồng Phòng</h3>
+            <p class="text-muted mb-0">Theo dõi định mức tiêu hao mỹ phẩm, gel dẫn sóng và gửi phiếu yêu cầu cấp mới</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Staff/Dashboard" class="btn btn-outline-secondary rounded-pill px-3">
+                <i class="fas fa-arrow-left me-1"></i> Bàn làm việc KTV
+            </a>
+            <button class="btn btn-teal rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#requestSupplyModal">
+                <i class="fas fa-plus-circle me-1"></i> Yêu cầu cấp vật tư
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 rounded-4 shadow-sm p-4 bg-white">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Danh Mục Vật Tư Tiêu Hao Trực Thuộc</h5>
+                    <span class="badge bg-teal text-white rounded-pill px-3 py-1">Tự động đối soát kho</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tên vật tư / Dược mỹ phẩm</th>
+                                <th>Số lượng tồn</th>
+                                <th>Khu vực buồng phòng</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                var badgeClass = item.Status switch
+                                {
+                                    "Đầy đủ" => "bg-success text-white",
+                                    "Sắp hết" => "bg-warning text-dark",
+                                    _ => "bg-danger text-white"
+                                };
+
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold text-dark">@item.Name</div>
+                                        <div class="small text-muted">Mã vật tư: #VT-00@item.Id</div>
+                                    </td>
+                                    <td>
+                                        <span class="fs-6 fw-bold">@item.StockQty</span> <span class="small text-muted">@item.Unit</span>
+                                    </td>
+                                    <td class="small">@item.RoomAssigned</td>
+                                    <td>
+                                        <span class="badge @badgeClass rounded-pill px-2 py-1 small">@item.Status</span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-xs btn-outline-teal rounded-pill px-2 py-1" onclick="quickRequestSupply('@item.Name', '@item.Unit')">
+                                            Xin cấp thêm
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 rounded-4 shadow-sm p-4 bg-white mb-4">
+                <h5 class="fw-bold mb-3"><i class="fas fa-history text-teal me-2"></i> Phiếu Xuất Kho Gần Đây</h5>
+                <div class="d-flex flex-column gap-2 small">
+                    <div class="p-3 rounded-3 bg-light border-start border-4 border-success">
+                        <div class="fw-bold">Phiếu #XK-2610-09</div>
+                        <div class="text-muted">Đã nhận: 10 Can Gel Hifu lạnh & 50 Mặt nạ TBG</div>
+                        <div class="small text-muted mt-1"><i class="fas fa-clock me-1"></i> Hôm qua, 16:30 - Người duyệt: Kho Trưởng</div>
+                    </div>
+                    <div class="p-3 rounded-3 bg-light border-start border-4 border-primary">
+                        <div class="fw-bold">Phiếu #XK-2610-04</div>
+                        <div class="text-muted">Đã nhận: 5 Chai Serum HA B5 phục hồi Pháp</div>
+                        <div class="small text-muted mt-1"><i class="fas fa-clock me-1"></i> 24/10/2026 - Người duyệt: Kho Trưởng</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 rounded-4 shadow-sm p-4 text-white" style="background: linear-gradient(135deg, #0f766e, #115e59);">
+                <h6 class="fw-bold mb-2"><i class="fas fa-exclamation-triangle text-warning me-2"></i> Quy định xuất kho</h6>
+                <p class="small text-white-50 mb-0">
+                    Vật tư tiêu hao đặc thù (Gel dẫn sóng, đầu tip, tinh chất điện di) cần lập phiếu yêu cầu trước 15:00 hàng ngày để bộ phận Kho tổng chuẩn bị vô trùng.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function quickRequestSupply(name, unit) {
+    const qty = prompt(`Nhập số lượng ${unit} '${name}' cần cấp thêm:`, "2");
+    if (!qty || isNaN(qty) || parseInt(qty) <= 0) return;
+
+    try {
+        const res = await fetch('/Staff/RequestSupply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                ItemName: name,
+                Quantity: parseInt(qty),
+                Unit: unit
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message);
+        }
+    } catch(err) {
+        console.error(err);
+        alert('Lỗi gửi yêu cầu vật tư');
+    }
+}
+</script>

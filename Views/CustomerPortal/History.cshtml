@@ -1,0 +1,187 @@
+@{
+    ViewData["Title"] = "Nhật Ký Cải Thiện Da & Kết Quả Quét Da AI";
+}
+
+<div class="customer-history-page">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="fas fa-camera-retro text-teal me-2"></i> Nhật Ký Cải Thiện Da & So Sánh AI</h3>
+            <p class="text-muted mb-0">Hồ sơ theo dõi tiến triển lâm sàng và thanh trượt so sánh hình ảnh quang phổ da Trước & Sau điều trị</p>
+        </div>
+        <div>
+            <a href="/CustomerPortal/Index" class="btn btn-outline-secondary rounded-pill px-3">
+                <i class="fas fa-arrow-left me-1"></i> Cổng Hội Viên
+            </a>
+        </div>
+    </div>
+
+    <!-- Interactive Before / After Image Slider Card -->
+    <div class="card border-0 rounded-4 shadow-sm p-4 bg-white mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <div>
+                <span class="badge bg-teal text-white rounded-pill px-3 py-1 mb-1">LIỆU TRÌNH: TRỊ NÁM LASER PICO STAR</span>
+                <h5 class="fw-bold mb-0">Thanh Trượt So Sánh Hình Ảnh Quét Da Quang Phổ AI (Kéo Qua Lại)</h5>
+            </div>
+            <div>
+                <span class="badge bg-success-subtle text-success fs-6 rounded-pill px-3 py-2 fw-bold">
+                    <i class="fas fa-check-circle me-1"></i> Đạt 88% mục tiêu điều trị
+                </span>
+            </div>
+        </div>
+
+        <p class="text-muted small mb-3">
+            <i class="fas fa-arrows-alt-h text-teal me-1"></i> <strong>Hướng dẫn:</strong> Dùng chuột hoặc ngón tay kéo thanh tròn ở giữa sang trái / phải để xem cận cảnh chuyển biến của các đốm nám và sắc tố biểu bì.
+        </p>
+
+        <!-- Container Slider -->
+        <div class="before-after-slider-container position-relative rounded-4 overflow-hidden shadow-sm mx-auto" style="max-width: 800px; height: 380px; user-select: none;">
+            <!-- Ảnh Sau điều trị (Nằm dưới) -->
+            <img src="/images/aqua-detox.jpg" class="w-100 h-100 object-fit-cover position-absolute top-0 start-0" alt="Sau điều trị" />
+            <span class="badge bg-success position-absolute top-0 end-0 m-3 px-3 py-2 rounded-pill fw-bold shadow-sm" style="z-index: 2;">
+                <i class="fas fa-sparkles me-1"></i> HIỆN TẠI (SAU 3 BUỔI)
+            </span>
+
+            <!-- Ảnh Trước điều trị (Nằm trên, bị clip-path hoặc cắt chiều rộng theo slider) -->
+            <div id="beforeImageWrapper" class="position-absolute top-0 start-0 h-100 overflow-hidden" style="width: 50%; z-index: 3;">
+                <img src="/images/laser-pico.jpg" class="h-100 object-fit-cover" style="width: 800px; max-width: none; filter: contrast(1.1) brightness(0.85);" alt="Trước điều trị" />
+                <span class="badge bg-danger position-absolute top-0 start-0 m-3 px-3 py-2 rounded-pill fw-bold shadow-sm">
+                    <i class="fas fa-history me-1"></i> TRƯỚC ĐIỀU TRỊ (28/09/2026)
+                </span>
+            </div>
+
+            <!-- Thanh trượt chia đôi -->
+            <div id="sliderHandle" class="position-absolute top-0 h-100 d-flex flex-column align-items-center justify-content-center cursor-ew-resize" style="left: 50%; width: 4px; background: white; z-index: 4; transform: translateX(-50%); box-shadow: 0 0 10px rgba(0,0,0,0.5);">
+                <div class="rounded-circle bg-white text-dark shadow d-flex align-items-center justify-content-center fs-6 fw-bold" style="width: 40px; height: 40px; border: 3px solid #0d9488;">
+                    <i class="fas fa-arrows-alt-h text-teal"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between text-muted small mt-3 mx-auto" style="max-width: 800px;">
+            <span><i class="fas fa-circle text-danger me-1"></i> Trước: Sắc tố Melanin 68%, da thiếu ẩm (40%), đốm nâu tầng nông</span>
+            <span><i class="fas fa-circle text-success me-1"></i> Hiện tại: Mờ nám 75%, độ ẩm 82%, Collagen tăng sinh săn chắc</span>
+        </div>
+    </div>
+
+    <!-- Chỉ số lâm sàng chi tiết & Nhận xét bác sĩ -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+            <div class="card border-0 rounded-4 shadow-sm p-4 bg-white h-100">
+                <h5 class="fw-bold mb-3"><i class="fas fa-chart-line text-teal me-2"></i> Tiến Trình Cải Thiện 5 Chỉ Số Da AI</h5>
+                
+                <div class="d-flex flex-column gap-3">
+                    <div>
+                        <div class="d-flex justify-content-between small fw-bold mb-1">
+                            <span>Hắc Sắc Tố Melanin</span>
+                            <span class="text-success"><i class="fas fa-arrow-down me-1"></i> Giảm từ 68% -> 21% (Mờ nám 75%)</span>
+                        </div>
+                        <div class="progress rounded-pill" style="height: 8px;">
+                            <div class="progress-bar bg-success" style="width: 21%"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="d-flex justify-content-between small fw-bold mb-1">
+                            <span>Độ Ẩm Tầng Sâu Biểu Bì</span>
+                            <span class="text-teal"><i class="fas fa-arrow-up me-1"></i> Tăng từ 40% -> 82% (Căng bóng ngậm nước)</span>
+                        </div>
+                        <div class="progress rounded-pill" style="height: 8px;">
+                            <div class="progress-bar bg-teal" style="width: 82%"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="d-flex justify-content-between small fw-bold mb-1">
+                            <span>Mật Độ Collagen & Săn Chắc</span>
+                            <span class="text-primary"><i class="fas fa-arrow-up me-1"></i> Tăng từ 52% -> 85% (Phục hồi mô nâng đỡ)</span>
+                        </div>
+                        <div class="progress rounded-pill" style="height: 8px;">
+                            <div class="progress-bar bg-primary" style="width: 85%"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="d-flex justify-content-between small fw-bold mb-1">
+                            <span>Bã Nhờn & Lỗ Chân Lông</span>
+                            <span class="text-success"><i class="fas fa-arrow-down me-1"></i> Cân bằng 24% (Thông thoáng biểu bì)</span>
+                        </div>
+                        <div class="progress rounded-pill" style="height: 8px;">
+                            <div class="progress-bar bg-info" style="width: 24%"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="d-flex justify-content-between small fw-bold mb-1">
+                            <span>Vi khuẩn P.Acnes Gây Mụn</span>
+                            <span class="text-success"><i class="fas fa-check-circle me-1"></i> Kiểm soát 8% (An toàn tuyệt đối)</span>
+                        </div>
+                        <div class="progress rounded-pill" style="height: 8px;">
+                            <div class="progress-bar bg-success" style="width: 8%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card border-0 rounded-4 shadow-sm p-4 bg-white h-100">
+                <h5 class="fw-bold mb-3"><i class="fas fa-user-md text-teal me-2"></i> Lời Khuyên Của Bác Sĩ Điều Trị</h5>
+                
+                <div class="d-flex gap-3 mb-3">
+                    <div class="fs-1 text-teal"><i class="fas fa-quote-left"></i></div>
+                    <div>
+                        <p class="fst-italic text-dark mb-2">
+                            "Làn da của Minh Anh đáp ứng bước sóng Laser Pico rất tốt, không hề bị tăng sắc tố sau viêm. 
+                            Giai đoạn này cần tiếp tục duy trì bôi serum cấp ẩm HA B5 vào buổi sáng và thoa kem chống nắng phổ rộng đầy đủ trước khi ra ngoài."
+                        </p>
+                        <div class="fw-bold text-teal">BS. CKI Lê Hoàng Yến</div>
+                        <div class="small text-muted">Chuyên khoa Da liễu Thẩm mỹ - Luna Clinic</div>
+                    </div>
+                </div>
+
+                <div class="border-top pt-3 mt-auto">
+                    <a href="/CustomerPortal/MyPrescriptions" class="btn btn-outline-teal w-100 rounded-pill mb-2">
+                        <i class="fas fa-prescription me-1"></i> Xem Toa Mỹ Phẩm Tại Nhà
+                    </a>
+                    <a href="/CustomerPortal/Appointments" class="btn btn-teal w-100 rounded-pill">
+                        <i class="fas fa-calendar-alt me-1"></i> Đặt Hẹn Buổi 4/5 Tiếp Theo
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Logic kéo thanh trượt Interactive Before / After Image Slider
+const container = document.querySelector('.before-after-slider-container');
+const wrapper = document.getElementById('beforeImageWrapper');
+const handle = document.getElementById('sliderHandle');
+
+let isSliding = false;
+
+function setSliderPos(x) {
+    const rect = container.getBoundingClientRect();
+    let posX = x - rect.left;
+    if (posX < 0) posX = 0;
+    if (posX > rect.width) posX = rect.width;
+
+    const pct = (posX / rect.width) * 100;
+    wrapper.style.width = `${pct}%`;
+    handle.style.left = `${pct}%`;
+}
+
+container.addEventListener('mousedown', () => isSliding = true);
+window.addEventListener('mouseup', () => isSliding = false);
+window.addEventListener('mousemove', (e) => {
+    if (!isSliding) return;
+    setSliderPos(e.clientX);
+});
+
+container.addEventListener('touchstart', () => isSliding = true);
+window.addEventListener('touchend', () => isSliding = false);
+window.addEventListener('touchmove', (e) => {
+    if (!isSliding || !e.touches[0]) return;
+    setSliderPos(e.touches[0].clientX);
+});
+</script>

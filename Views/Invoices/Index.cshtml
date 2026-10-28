@@ -1,0 +1,781 @@
+@model IEnumerable<GiaoDienSpa.Models.Invoice>
+
+@{
+    ViewData["Title"] = "Hóa đơn & Thanh toán";
+}
+
+<div class="customer-page invoice-page">
+
+    <!-- TIÊU ĐỀ TRANG -->
+    <div class="customer-page-header">
+        <div>
+            <div class="customer-breadcrumb">LUNA SPA / Tài chính & Thu ngân</div>
+            <h1>Quản lý hóa đơn & Thanh toán</h1>
+            <p>Biên lai dịch vụ làm đẹp, bán lẻ mỹ phẩm, đối soát thanh toán và đề xuất Upsell bằng AI.</p>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="spa-ai-btn" id="openAiUpsellModal" type="button">
+                <span>✨</span> AI Phân tích Upsell
+            </button>
+            <button class="customer-primary-btn" id="openInvoiceModal" type="button">
+                <span>＋</span> Tạo hóa đơn mới
+            </button>
+        </div>
+    </div>
+
+    <!-- THỐNG KÊ DOANH THU & HÓA ĐƠN -->
+    <div class="customer-stats">
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-purple">₫</div>
+            <div>
+                <span class="customer-stat-label">Doanh thu thu về hôm nay</span>
+                <strong id="totalRevenue" style="color: #985c7e;">@(((decimal)(ViewBag.TotalRevenue ?? 0)).ToString("N0")) đ</strong>
+                <small>Hóa đơn đã thanh toán</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-blue">▧</div>
+            <div>
+                <span class="customer-stat-label">Tổng số hóa đơn</span>
+                <strong id="totalInvoices">@ViewBag.TotalInvoices</strong>
+                <small>Hóa đơn phát sinh trong ngày</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-green">✓</div>
+            <div>
+                <span class="customer-stat-label">Đã thanh toán</span>
+                <strong id="paidInvoices" style="color: #278c57;">@ViewBag.PaidInvoices</strong>
+                <small>Giao dịch hoàn tất 100%</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-orange">⏳</div>
+            <div>
+                <span class="customer-stat-label">Chờ thanh toán</span>
+                <strong id="pendingInvoices" style="color: #d88a2c;">@ViewBag.PendingInvoices</strong>
+                <small>Khách đang trong phòng trị liệu</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI SMART BANNER -->
+    <div class="spa-ai-banner">
+        <div class="spa-ai-banner-left">
+            <div class="spa-ai-icon-pulse">✦</div>
+            <div class="spa-ai-content">
+                <span class="spa-ai-tag">✨ TRỢ LÝ DOANH THU & GỢI Ý UPSELL AI</span>
+                <p class="spa-ai-text">
+                    Khách hàng thực hiện liệu trình <strong>Trẻ hóa da Laser</strong> có 78% xu hướng mua kèm <strong>Serum B5 HA</strong> & <strong>Kem chống nắng</strong>. Nhân viên thu ngân hãy gợi ý combo phục hồi tại nhà để tăng 30% giá trị hóa đơn.
+                </p>
+            </div>
+        </div>
+        <button class="spa-ai-btn" id="aiUpsellBannerBtn" type="button">Xem kịch bản Upsell</button>
+    </div>
+
+    <!-- DANH SÁCH HÓA ĐƠN -->
+    <div class="customer-content-card">
+        <div class="customer-content-heading">
+            <div>
+                <h2>Danh sách hóa đơn LUNA SPA</h2>
+                <p>Theo dõi chi tiết dịch vụ, mỹ phẩm đi kèm, giảm giá và phương thức thanh toán.</p>
+            </div>
+            <span class="customer-total-badge" id="invoiceCountBadge">@Model.Count() hóa đơn</span>
+        </div>
+
+        <div class="customer-toolbar">
+            <div class="customer-search-box">
+                <span>⌕</span>
+                <input type="text" id="invoiceSearch"
+                       placeholder="Tìm theo mã HĐ, tên khách, số điện thoại, nhân viên..." />
+            </div>
+
+            <select id="invoiceStatusFilter" class="customer-filter">
+                <option value="">Tất cả trạng thái</option>
+                <option value="Đã thanh toán">Đã thanh toán</option>
+                <option value="Chờ thanh toán">Chờ thanh toán</option>
+                <option value="Đã hủy">Đã hủy</option>
+            </select>
+
+            <select id="invoicePaymentFilter" class="customer-filter">
+                <option value="">Tất cả hình thức</option>
+                <option value="Chuyển khoản QR">Chuyển khoản QR</option>
+                <option value="Thẻ POS">Thẻ POS</option>
+                <option value="Tiền mặt">Tiền mặt</option>
+                <option value="Ví điện tử">Ví điện tử</option>
+            </select>
+
+            <button class="customer-secondary-btn" id="resetInvoiceFilter" type="button">
+                ↺ Làm mới
+            </button>
+        </div>
+
+        <div class="customer-table-wrap">
+            <table class="customer-table">
+                <thead>
+                    <tr>
+                        <th>MÃ HÓA ĐƠN</th>
+                        <th>KHÁCH HÀNG</th>
+                        <th>CHUYÊN VIÊN PHỤ TRÁCH</th>
+                        <th>DỊCH VỤ & MỸ PHẨM</th>
+                        <th>TỔNG THANH TOÁN</th>
+                        <th>HÌNH THỨC</th>
+                        <th>TRẠNG THÁI</th>
+                        <th class="customer-action-heading">THAO TÁC</th>
+                    </tr>
+                </thead>
+                <tbody id="invoiceTableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="customer-table-footer">
+            <span id="invoicePageInfo">Hiển thị @Model.Count() hóa đơn</span>
+            <div class="customer-pagination">
+                <button type="button" disabled>‹</button>
+                <button type="button" class="current-page">1</button>
+                <button type="button" disabled>›</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL TẠO HÓA ĐƠN MỚI -->
+<div class="customer-modal-backdrop" id="invoiceModal">
+    <div class="customer-modal" style="max-width: 720px;">
+        <div class="customer-modal-header">
+            <div>
+                <h2 id="invoiceModalTitle">Tạo hóa đơn thanh toán mới</h2>
+                <p>Chọn dịch vụ, mỹ phẩm bán lẻ và áp dụng ưu đãi chiết khấu.</p>
+            </div>
+            <button type="button" class="customer-modal-close" id="closeInvoiceModal">×</button>
+        </div>
+
+        <form id="invoiceForm">
+            <input type="hidden" id="invoiceEditId" />
+
+            <div class="customer-form-grid">
+                <div class="customer-form-group">
+                    <label for="invCustomerName">Tên khách hàng <span>*</span></label>
+                    <input id="invCustomerName" type="text" placeholder="Ví dụ: Nguyễn Minh Anh" required />
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="invCustomerPhone">Số điện thoại <span>*</span></label>
+                    <input id="invCustomerPhone" type="tel" placeholder="Ví dụ: 0987 654 321" required />
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="invStaffName">Kỹ thuật viên / Thu ngân phụ trách <span>*</span></label>
+                    <select id="invStaffName" required>
+                        <option value="Bác sĩ Lê Hoàng Yến">Bác sĩ Lê Hoàng Yến</option>
+                        <option value="Nguyễn Thu Trang (KTV Trưởng)">Nguyễn Thu Trang (KTV Trưởng)</option>
+                        <option value="Đặng Thùy Dung (KTV)">Đặng Thùy Dung (KTV)</option>
+                        <option value="Vũ Khánh Linh (KTV)">Vũ Khánh Linh (KTV)</option>
+                        <option value="Trần Minh Ngọc (Lễ tân)">Trần Minh Ngọc (Lễ tân)</option>
+                    </select>
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="invPaymentMethod">Phương thức thanh toán</label>
+                    <select id="invPaymentMethod">
+                        <option value="Chuyển khoản QR">Chuyển khoản QR (VietQR / Napas)</option>
+                        <option value="Thẻ POS">Thẻ ngân hàng (Máy POS)</option>
+                        <option value="Tiền mặt">Tiền mặt tại quầy</option>
+                        <option value="Ví điện tử MoMo">Ví điện tử MoMo / ZaloPay</option>
+                    </select>
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="invStatus">Trạng thái thanh toán</label>
+                    <select id="invStatus">
+                        <option value="Đã thanh toán">Đã thanh toán</option>
+                        <option value="Chờ thanh toán">Chờ thanh toán</option>
+                        <option value="Đã hủy">Đã hủy</option>
+                    </select>
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="invDiscount">Chiết khấu / Ưu đãi (VNĐ)</label>
+                    <input id="invDiscount" type="number" min="0" step="10000" value="0" />
+                </div>
+
+                <!-- KHU VỰC THÊM HẠNG MỤC DỊCH VỤ / MỸ PHẨM -->
+                <div class="customer-form-group customer-form-full">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+                        <label style="margin: 0;">Các dịch vụ & mỹ phẩm trong hóa đơn <span>*</span></label>
+                        <button type="button" class="spa-ai-btn" id="btnAddInvoiceItem" style="padding: 4px 10px; font-size: 11px;">
+                            ＋ Thêm hạng mục
+                        </button>
+                    </div>
+
+                    <div class="invoice-items-container" id="invoiceItemsList">
+                        <!-- Danh sách động -->
+                    </div>
+                </div>
+
+                <div class="customer-form-group customer-form-full">
+                    <div style="background: #fdfafc; border: 1px solid #eee7ed; border-radius: 9px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 600; color: #51475f;">Tổng tiền thực thu:</span>
+                        <strong style="font-size: 20px; color: #985c7e;" id="invCalculatedTotal">0 đ</strong>
+                    </div>
+                </div>
+
+                <div class="customer-form-group customer-form-full">
+                    <label for="invNote">Ghi chú hóa đơn</label>
+                    <textarea id="invNote" rows="2" placeholder="Thông tin ưu đãi sinh nhật, voucher hoặc yêu cầu riêng của khách..."></textarea>
+                </div>
+            </div>
+
+            <div class="customer-modal-footer">
+                <button type="button" class="customer-secondary-btn" id="cancelInvoiceModal">Hủy</button>
+                <button type="submit" class="customer-primary-btn" id="saveInvoiceBtn">Lưu hóa đơn</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL XEM & IN BIÊN LAI SPA (RECEIPT PREVIEW) -->
+<div class="customer-modal-backdrop" id="receiptModal">
+    <div class="customer-modal receipt-modal-card">
+        <div class="customer-modal-header" style="border-bottom: none; padding-bottom: 0;">
+            <span class="spa-ai-tag">BIÊN LAI ĐIỆN TỬ CHUẨN LUNA SPA</span>
+            <button type="button" class="customer-modal-close" id="closeReceiptModal">×</button>
+        </div>
+
+        <div class="spa-receipt-container" id="printReceiptArea">
+            <div class="spa-receipt-header">
+                <div class="receipt-logo">✿</div>
+                <h3>LUNA SPA & WELLNESS</h3>
+                <p>128 Nguyễn Trãi, Quận 1, TP. Hồ Chí Minh • Hotline: 0912 345 678</p>
+                <p style="font-size: 11px; color: #a49baa;">--- *** ---</p>
+                <h4 style="margin: 8px 0 0; font-size: 16px; color: #302744;">HÓA ĐƠN THANH TOÁN</h4>
+                <div style="font-family: monospace; font-size: 12px; color: #985c7e; margin-top: 3px;" id="recCode">HD-20261027-001</div>
+            </div>
+
+            <div class="receipt-meta-grid">
+                <div><span>Ngày in:</span> <strong id="recDate">27/10/2026 15:30</strong></div>
+                <div><span>Thu ngân/KTV:</span> <strong id="recStaff">Lê Hoàng Yến</strong></div>
+                <div><span>Khách hàng:</span> <strong id="recCustomer">Nguyễn Minh Anh</strong></div>
+                <div><span>Điện thoại:</span> <strong id="recPhone">0987 654 321</strong></div>
+                <div><span>Hình thức:</span> <strong id="recPaymentMethod">Chuyển khoản QR</strong></div>
+                <div><span>Trạng thái:</span> <strong id="recStatus" style="color: #278c57;">Đã thanh toán</strong></div>
+            </div>
+
+            <table class="receipt-items-table">
+                <thead>
+                    <tr>
+                        <th>TÊN DỊCH VỤ / MỸ PHẨM</th>
+                        <th style="text-align: center;">SL</th>
+                        <th style="text-align: right;">ĐƠN GIÁ</th>
+                        <th style="text-align: right;">THÀNH TIỀN</th>
+                    </tr>
+                </thead>
+                <tbody id="recItemsTableBody">
+                    <!-- Dynamic -->
+                </tbody>
+            </table>
+
+            <div class="receipt-summary-box">
+                <div class="receipt-summary-row">
+                    <span>Tổng tạm tính:</span>
+                    <strong id="recSubtotal">0 đ</strong>
+                </div>
+                <div class="receipt-summary-row">
+                    <span>Chiết khấu / Ưu đãi:</span>
+                    <strong id="recDiscount" style="color: #d85f6b;">- 0 đ</strong>
+                </div>
+                <div class="receipt-summary-row final">
+                    <span>TỔNG CỘNG:</span>
+                    <span id="recFinalTotal">0 đ</span>
+                </div>
+            </div>
+
+            <div class="receipt-ai-footer" id="recAiBox">
+                <strong>✨ Lời dặn chăm sóc sau liệu trình từ Luna AI:</strong>
+                <p id="recAiAdvice" style="margin: 4px 0 0;">
+                    Uống nhiều nước, bôi kem chống nắng đều đặn và tránh tiếp xúc ánh nắng gắt trong 48 giờ để tối ưu phác đồ trẻ hóa.
+                </p>
+            </div>
+
+            <div class="receipt-footer-text">
+                <p style="margin: 0;">Cảm ơn Quý khách đã tin tưởng và đồng hành cùng LUNA SPA!</p>
+                <small style="color: #b3a9be;">Mọi thắc mắc xin vui lòng liên hệ hotline chăm sóc khách hàng 24/7</small>
+            </div>
+        </div>
+
+        <div class="customer-modal-footer">
+            <button type="button" class="customer-secondary-btn" id="closeReceiptBtn">Đóng</button>
+            <button type="button" class="customer-primary-btn" id="printReceiptBtn">
+                🖨 In hóa đơn / Lưu PDF
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL AI UPSELL INSIGHTS -->
+<div class="customer-modal-backdrop" id="aiUpsellModal">
+    <div class="customer-modal" style="max-width: 620px;">
+        <div class="customer-modal-header" style="background: linear-gradient(135deg, #fdf8fb 0%, #faedf4 100%);">
+            <div>
+                <span class="spa-ai-tag">✨ TRỢ LÝ PHÂN TÍCH DOANH THU & UPSELL LUNA AI</span>
+                <h2 style="color: #985c7e; margin-top: 4px;">Tối ưu hóa giỏ hàng & Doanh số Spa</h2>
+                <p>Khám phá mô hình hành vi tiêu dùng và kịch bản tư vấn tăng doanh số cho nhân viên.</p>
+            </div>
+            <button type="button" class="customer-modal-close" id="closeAiUpsellModal">×</button>
+        </div>
+
+        <div style="padding: 22px 25px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px;">
+                <div style="background: #fdfafc; padding: 14px; border-radius: 10px; border: 1px solid #eee7ed;">
+                    <span style="font-size: 11px; color: #8c8296;">Giá trị hóa đơn trung bình</span>
+                    <strong style="display: block; font-size: 20px; color: #985c7e; margin-top: 3px;" id="aiAvgTicket">2.120.000 đ</strong>
+                    <small style="color: #278c57; font-size: 11px;">Tăng 14% so với tuần trước</small>
+                </div>
+                <div style="background: #fdfafc; padding: 14px; border-radius: 10px; border: 1px solid #eee7ed;">
+                    <span style="font-size: 11px; color: #8c8296;">Combo bán chạy nhất</span>
+                    <strong style="display: block; font-size: 14px; color: #302744; margin-top: 3px;">Laser Pico + Serum B5</strong>
+                    <small style="color: #985c7e; font-size: 11px;">Tỷ lệ ghép đơn 78%</small>
+                </div>
+            </div>
+
+            <div style="background: #fcf8fd; border-left: 4px solid #a76d8e; padding: 14px 16px; border-radius: 0 10px 10px 0; margin-bottom: 16px;">
+                <strong style="display: block; font-size: 13px; color: #3a2b4b; margin-bottom: 4px;">
+                    ✦ Kịch bản tư vấn tại quầy gợi ý cho thu ngân:
+                </strong>
+                <p style="margin: 0; font-size: 12px; color: #655874; line-height: 1.5;">
+                    "Chị ơi, sau buổi Laser hôm nay làn da đang trong giai đoạn kích thích tăng sinh collagen tốt nhất. Nếu chị kết hợp cùng Serum B5 HA Intensifier của SkinCeuticals đang được giảm 10% tại quầy, hiệu quả phục hồi sẽ nhanh gấp 2 lần ạ!"
+                </p>
+            </div>
+
+            <div style="background: #eef7ff; border: 1px solid #c9e3fc; border-radius: 10px; padding: 12px 14px; font-size: 12px; color: #1e598f;">
+                💡 <strong>Dự báo AI:</strong> Nếu áp dụng kịch bản này cho 8 khách hẹn buổi chiều nay, doanh thu ước tính sẽ tăng thêm <strong>5.400.000 đ</strong>.
+            </div>
+        </div>
+
+        <div class="customer-modal-footer">
+            <button type="button" class="customer-secondary-btn" id="closeAiUpsellBtn">Đóng</button>
+            <button type="button" class="customer-primary-btn" id="applyAiUpsellScriptBtn">
+                ✓ Áp dụng kịch bản cho ca trực
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let invoices = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }));
+
+    const tableBody = document.getElementById("invoiceTableBody");
+    const modal = document.getElementById("invoiceModal");
+    const form = document.getElementById("invoiceForm");
+    const receiptModal = document.getElementById("receiptModal");
+    const aiModal = document.getElementById("aiUpsellModal");
+    const itemsList = document.getElementById("invoiceItemsList");
+
+    // Mẫu dịch vụ & mỹ phẩm có sẵn để chọn nhanh trong hóa đơn
+    const catalogItems = [
+        { name: "Liệu trình Trẻ hóa da Laser Pico Pro", type: "Dịch vụ", price: 2500000 },
+        { name: "Chăm sóc da chuyên sâu Aqua Detox", type: "Dịch vụ", price: 850000 },
+        { name: "Massage Thảo Dược Cổ Vai Gáy (60p)", type: "Dịch vụ", price: 750000 },
+        { name: "Nâng cơ trẻ hóa Hifu Ultra Collagen", type: "Dịch vụ", price: 3800000 },
+        { name: "Gội đầu dưỡng sinh Thảo dược (45p)", type: "Dịch vụ", price: 350000 },
+        { name: "Serum Cấp Ẩm Phục Hồi B5 HA Intensifier", type: "Mỹ phẩm", price: 650000 },
+        { name: "Mặt Nạ Vàng 24K Collagen Sinh Học", type: "Mỹ phẩm", price: 980000 },
+        { name: "Kem Chống Nắng Phục Hồi SPF50+", type: "Mỹ phẩm", price: 680000 },
+        { name: "Sữa Rửa Mặt Tạo Bọt Dịu Nhẹ", type: "Mỹ phẩm", price: 520000 }
+    ];
+
+    function escapeHtml(val) {
+        return String(val ?? "").replace(/[&<>"']/g, function (c) {
+            return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[c];
+        });
+    }
+
+    function formatCurrency(num) {
+        return Number(num || 0).toLocaleString("vi-VN") + " đ";
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return "—";
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+    }
+
+    function renderInvoices() {
+        const keyword = document.getElementById("invoiceSearch").value.trim().toLowerCase();
+        const status = document.getElementById("invoiceStatusFilter").value;
+        const payment = document.getElementById("invoicePaymentFilter").value;
+
+        const filtered = invoices.filter(inv => {
+            const matchKeyword =
+                inv.customerName.toLowerCase().includes(keyword) ||
+                (inv.invoiceCode && inv.invoiceCode.toLowerCase().includes(keyword)) ||
+                (inv.customerPhone && inv.customerPhone.toLowerCase().includes(keyword)) ||
+                (inv.staffName && inv.staffName.toLowerCase().includes(keyword));
+
+            const matchStatus = !status || inv.status === status;
+            const matchPayment = !payment || inv.paymentMethod.includes(payment);
+
+            return matchKeyword && matchStatus && matchPayment;
+        });
+
+        tableBody.innerHTML = "";
+
+        if (filtered.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="customer-empty">
+                        Không tìm thấy hóa đơn phù hợp.
+                    </td>
+                </tr>`;
+        } else {
+            filtered.forEach(inv => {
+                const initials = inv.customerName.trim().split(/\s+/).slice(-2)
+                    .map(w => w.charAt(0)).join("").toUpperCase();
+
+                const isPaid = inv.status === "Đã thanh toán";
+                const isPending = inv.status === "Chờ thanh toán";
+                const badgeClass = isPaid ? "status-active" : (isPending ? "status-pending" : "status-inactive");
+
+                // Tóm tắt sản phẩm
+                let itemsSummary = "Dịch vụ Spa";
+                if (inv.items && inv.items.length > 0) {
+                    itemsSummary = inv.items.map(x => `${x.itemName} (x${x.quantity})`).join(", ");
+                    if (itemsSummary.length > 50) itemsSummary = itemsSummary.substring(0, 47) + "...";
+                }
+
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>
+                        <span class="invoice-code-badge">${escapeHtml(inv.invoiceCode || ('HD-' + inv.invoiceId))}</span>
+                        <small style="display:block; margin-top:4px; color:#958a9f; font-size:11px;">${formatDate(inv.createdDate)}</small>
+                    </td>
+                    <td>
+                        <div class="customer-person">
+                            <div class="customer-avatar">${escapeHtml(initials)}</div>
+                            <div>
+                                <strong style="color:#352b44;">${escapeHtml(inv.customerName)}</strong>
+                                <small>${escapeHtml(inv.customerPhone || '—')}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span style="font-size:12px; color:#4a3f5a; font-weight:600;">${escapeHtml(inv.staffName || 'Nhân viên Spa')}</span>
+                    </td>
+                    <td>
+                        <span style="font-size:12px; color:#625771;" title="${escapeHtml(itemsSummary)}">${escapeHtml(itemsSummary)}</span>
+                        <small style="display:block; color:#958a9f; font-size:11px;">${inv.items ? inv.items.length : 1} hạng mục</small>
+                    </td>
+                    <td>
+                        <div class="invoice-amount-text">${formatCurrency(inv.totalAmount)}</div>
+                        ${inv.discountAmount > 0 ? `<small style="color:#d85f6b; font-size:11px;">Giảm: -${formatCurrency(inv.discountAmount)}</small>` : ''}
+                    </td>
+                    <td>
+                        <span class="payment-method-tag">💳 ${escapeHtml(inv.paymentMethod)}</span>
+                    </td>
+                    <td>
+                        <span class="customer-status ${badgeClass}">
+                            <i></i>${escapeHtml(inv.status)}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="customer-row-actions">
+                            <button type="button" title="Xem & In biên lai hóa đơn" data-action="print" data-id="${inv.invoiceId}" style="color:#985c7e;">🧾</button>
+                            <button type="button" title="Chỉnh sửa hóa đơn" data-action="edit" data-id="${inv.invoiceId}">✎</button>
+                            <button type="button" title="Xóa" data-action="delete" data-id="${inv.invoiceId}">⌫</button>
+                        </div>
+                    </td>`;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Cập nhật thống kê
+        const totalRev = invoices.filter(x => x.status === "Đã thanh toán").reduce((sum, x) => sum + x.totalAmount, 0);
+        const paidCount = invoices.filter(x => x.status === "Đã thanh toán").length;
+        const pendingCount = invoices.filter(x => x.status === "Chờ thanh toán").length;
+
+        document.getElementById("totalRevenue").textContent = formatCurrency(totalRev);
+        document.getElementById("totalInvoices").textContent = invoices.length;
+        document.getElementById("paidInvoices").textContent = paidCount;
+        document.getElementById("pendingInvoices").textContent = pendingCount;
+
+        document.getElementById("invoiceCountBadge").textContent = `${filtered.length} hóa đơn`;
+        document.getElementById("invoicePageInfo").textContent = `Đang hiển thị ${filtered.length} trong tổng số ${invoices.length} hóa đơn`;
+    }
+
+    // Dynamic Invoice Item builder
+    function addInvoiceItemRow(item = null) {
+        const row = document.createElement("div");
+        row.className = "invoice-item-row";
+
+        const defaultItem = item || catalogItems[0];
+        row.innerHTML = `
+            <select class="inv-item-select" style="padding: 8px 10px; border: 1px solid #e3dce3; border-radius: 7px; font-size: 12px;">
+                ${catalogItems.map(c => `
+                    <option value="${c.name}" data-price="${c.price}" data-type="${c.type}" ${defaultItem && defaultItem.itemName === c.name ? 'selected' : ''}>
+                        [${c.type}] ${c.name} (${formatCurrency(c.price)})
+                    </option>
+                `).join('')}
+            </select>
+            <input type="number" class="inv-item-qty" min="1" value="${item ? item.quantity : 1}" style="padding: 8px; border: 1px solid #e3dce3; border-radius: 7px; font-size: 12px; width: 100%;" placeholder="SL" />
+            <input type="number" class="inv-item-price" min="0" step="10000" value="${item ? item.unitPrice : defaultItem.price}" style="padding: 8px; border: 1px solid #e3dce3; border-radius: 7px; font-size: 12px; width: 100%;" placeholder="Đơn giá" />
+            <button type="button" class="btn-remove-item" title="Xóa dòng">✕</button>
+        `;
+
+        const select = row.querySelector(".inv-item-select");
+        const priceInput = row.querySelector(".inv-item-price");
+        const qtyInput = row.querySelector(".inv-item-qty");
+        const removeBtn = row.querySelector(".btn-remove-item");
+
+        select.addEventListener("change", function () {
+            const selectedOpt = select.selectedOptions[0];
+            priceInput.value = selectedOpt.dataset.price || 0;
+            calculateModalTotal();
+        });
+
+        qtyInput.addEventListener("input", calculateModalTotal);
+        priceInput.addEventListener("input", calculateModalTotal);
+
+        removeBtn.addEventListener("click", function () {
+            if (itemsList.children.length > 1) {
+                row.remove();
+                calculateModalTotal();
+            } else {
+                alert("Hóa đơn phải có ít nhất 1 dịch vụ hoặc sản phẩm.");
+            }
+        });
+
+        itemsList.appendChild(row);
+        calculateModalTotal();
+    }
+
+    function calculateModalTotal() {
+        let subtotal = 0;
+        const rows = itemsList.querySelectorAll(".invoice-item-row");
+        rows.forEach(r => {
+            const qty = Number(r.querySelector(".inv-item-qty").value) || 0;
+            const price = Number(r.querySelector(".inv-item-price").value) || 0;
+            subtotal += (qty * price);
+        });
+
+        const discount = Number(document.getElementById("invDiscount").value) || 0;
+        const total = Math.max(0, subtotal - discount);
+        document.getElementById("invCalculatedTotal").textContent = formatCurrency(total);
+    }
+
+    document.getElementById("btnAddInvoiceItem").addEventListener("click", () => addInvoiceItemRow());
+    document.getElementById("invDiscount").addEventListener("input", calculateModalTotal);
+
+    function openModal(inv = null) {
+        form.reset();
+        itemsList.innerHTML = "";
+        document.getElementById("invoiceEditId").value = "";
+        document.getElementById("invoiceModalTitle").textContent = inv ? "Chỉnh sửa hóa đơn" : "Tạo hóa đơn mới";
+
+        if (inv) {
+            document.getElementById("invoiceEditId").value = inv.invoiceId;
+            document.getElementById("invCustomerName").value = inv.customerName;
+            document.getElementById("invCustomerPhone").value = inv.customerPhone;
+            document.getElementById("invStaffName").value = inv.staffName;
+            document.getElementById("invPaymentMethod").value = inv.paymentMethod;
+            document.getElementById("invStatus").value = inv.status;
+            document.getElementById("invDiscount").value = inv.discountAmount || 0;
+            document.getElementById("invNote").value = inv.note || "";
+
+            if (inv.items && inv.items.length > 0) {
+                inv.items.forEach(it => addInvoiceItemRow(it));
+            } else {
+                addInvoiceItemRow();
+            }
+        } else {
+            addInvoiceItemRow();
+        }
+
+        modal.classList.add("show");
+    }
+
+    function closeModal() {
+        modal.classList.remove("show");
+    }
+
+    document.getElementById("openInvoiceModal").addEventListener("click", () => openModal());
+    document.getElementById("closeInvoiceModal").addEventListener("click", closeModal);
+    document.getElementById("cancelInvoiceModal").addEventListener("click", closeModal);
+    modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+
+    // In / Xem Biên Lai
+    function openReceiptModal(inv) {
+        document.getElementById("recCode").textContent = inv.invoiceCode || ('HD-' + inv.invoiceId);
+        document.getElementById("recDate").textContent = formatDate(inv.createdDate);
+        document.getElementById("recStaff").textContent = inv.staffName || "Quản trị viên";
+        document.getElementById("recCustomer").textContent = inv.customerName;
+        document.getElementById("recPhone").textContent = inv.customerPhone || "—";
+        document.getElementById("recPaymentMethod").textContent = inv.paymentMethod;
+        document.getElementById("recStatus").textContent = inv.status;
+
+        const tbody = document.getElementById("recItemsTableBody");
+        tbody.innerHTML = "";
+
+        const items = inv.items && inv.items.length > 0 ? inv.items : [
+            { itemName: "Dịch vụ chăm sóc sắc đẹp", quantity: 1, unitPrice: inv.totalAmount }
+        ];
+
+        let subtotal = 0;
+        items.forEach(it => {
+            const lineTotal = it.quantity * it.unitPrice;
+            subtotal += lineTotal;
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td><strong>${escapeHtml(it.itemName)}</strong></td>
+                <td style="text-align: center;">${it.quantity}</td>
+                <td style="text-align: right;">${formatCurrency(it.unitPrice)}</td>
+                <td style="text-align: right; font-weight: 700;">${formatCurrency(lineTotal)}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById("recSubtotal").textContent = formatCurrency(subtotal);
+        document.getElementById("recDiscount").textContent = inv.discountAmount > 0 ? ("- " + formatCurrency(inv.discountAmount)) : "0 đ";
+        document.getElementById("recFinalTotal").textContent = formatCurrency(inv.totalAmount);
+
+        if (inv.aiUpsellRecommendation) {
+            document.getElementById("recAiAdvice").textContent = inv.aiUpsellRecommendation;
+        }
+
+        receiptModal.classList.add("show");
+    }
+
+    document.getElementById("closeReceiptModal").addEventListener("click", () => receiptModal.classList.remove("show"));
+    document.getElementById("closeReceiptBtn").addEventListener("click", () => receiptModal.classList.remove("show"));
+    receiptModal.addEventListener("click", e => { if (e.target === receiptModal) receiptModal.classList.remove("show"); });
+
+    document.getElementById("printReceiptBtn").addEventListener("click", function() {
+        window.print();
+    });
+
+    // AI Upsell modal
+    function openAiUpsellModal() {
+        const total = invoices.reduce((s, x) => s + x.totalAmount, 0);
+        const avg = invoices.length ? Math.round(total / invoices.length) : 0;
+        document.getElementById("aiAvgTicket").textContent = formatCurrency(avg);
+        aiModal.classList.add("show");
+    }
+
+    document.getElementById("openAiUpsellModal").addEventListener("click", openAiUpsellModal);
+    document.getElementById("aiUpsellBannerBtn").addEventListener("click", openAiUpsellModal);
+    document.getElementById("closeAiUpsellModal").addEventListener("click", () => aiModal.classList.remove("show"));
+    document.getElementById("closeAiUpsellBtn").addEventListener("click", () => aiModal.classList.remove("show"));
+    document.getElementById("applyAiUpsellScriptBtn").addEventListener("click", function() {
+        alert("Đã phân phát kịch bản gợi ý Upsell thành công tới màn hình máy POS của tất cả thu ngân!");
+        aiModal.classList.remove("show");
+    });
+    aiModal.addEventListener("click", e => { if (e.target === aiModal) aiModal.classList.remove("show"); });
+
+    // Filter
+    document.getElementById("invoiceSearch").addEventListener("input", renderInvoices);
+    document.getElementById("invoiceStatusFilter").addEventListener("change", renderInvoices);
+    document.getElementById("invoicePaymentFilter").addEventListener("change", renderInvoices);
+    document.getElementById("resetInvoiceFilter").addEventListener("click", function() {
+        document.getElementById("invoiceSearch").value = "";
+        document.getElementById("invoiceStatusFilter").value = "";
+        document.getElementById("invoicePaymentFilter").value = "";
+        renderInvoices();
+    });
+
+    // Form submit tạo hóa đơn
+    form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const editId = document.getElementById("invoiceEditId").value;
+        const discount = Number(document.getElementById("invDiscount").value) || 0;
+
+        const collectedItems = [];
+        let subtotal = 0;
+        const rows = itemsList.querySelectorAll(".invoice-item-row");
+        rows.forEach((r, idx) => {
+            const select = r.querySelector(".inv-item-select");
+            const opt = select.selectedOptions[0];
+            const qty = Number(r.querySelector(".inv-item-qty").value) || 1;
+            const price = Number(r.querySelector(".inv-item-price").value) || 0;
+            subtotal += (qty * price);
+
+            collectedItems.push({
+                itemId: idx + 1,
+                itemName: select.value,
+                itemType: opt ? opt.dataset.type : "Dịch vụ",
+                quantity: qty,
+                unitPrice: price,
+                discount: 0
+            });
+        });
+
+        const totalAmount = Math.max(0, subtotal - discount);
+
+        const invData = {
+            invoiceId: editId ? Number(editId) : 0,
+            customerName: document.getElementById("invCustomerName").value.trim(),
+            customerPhone: document.getElementById("invCustomerPhone").value.trim(),
+            staffName: document.getElementById("invStaffName").value,
+            paymentMethod: document.getElementById("invPaymentMethod").value,
+            status: document.getElementById("invStatus").value,
+            subTotal: subtotal,
+            discountAmount: discount,
+            totalAmount: totalAmount,
+            note: document.getElementById("invNote").value.trim(),
+            items: collectedItems
+        };
+
+        if (editId) {
+            const index = invoices.findIndex(x => x.invoiceId === Number(editId));
+            if (index !== -1) {
+                invData.invoiceCode = invoices[index].invoiceCode;
+                invData.createdDate = invoices[index].createdDate;
+                invData.aiUpsellRecommendation = invoices[index].aiUpsellRecommendation;
+                invoices[index] = invData;
+            }
+        } else {
+            const newId = invoices.length ? Math.max(...invoices.map(x => x.invoiceId)) + 1 : 1;
+            const now = new Date();
+            const dateStr = now.getFullYear() + String(now.getMonth() + 1).padStart(2, "0") + String(now.getDate()).padStart(2, "0");
+            invData.invoiceId = newId;
+            invData.invoiceCode = `HD-${dateStr}-${String(newId).padStart(3, "0")}`;
+            invData.createdDate = now.toISOString();
+            invData.aiUpsellRecommendation = `AI Phân tích: Đơn hàng mới giá trị ${formatCurrency(totalAmount)}. Khách được tích ${(totalAmount / 10000).toFixed(0)} điểm thành viên.`;
+            invoices.unshift(invData);
+        }
+
+        closeModal();
+        renderInvoices();
+    });
+
+    // Table click
+    tableBody.addEventListener("click", function (e) {
+        const btn = e.target.closest("button[data-action]");
+        if (!btn) return;
+
+        const id = Number(btn.dataset.id);
+        const inv = invoices.find(x => x.invoiceId === id);
+        if (!inv) return;
+
+        const action = btn.dataset.action;
+
+        if (action === "print") {
+            openReceiptModal(inv);
+        } else if (action === "edit") {
+            openModal(inv);
+        } else if (action === "delete") {
+            if (confirm(`Bạn có chắc muốn xóa hóa đơn "${inv.invoiceCode}" của khách hàng "${inv.customerName}"?`)) {
+                invoices = invoices.filter(x => x.invoiceId !== id);
+                renderInvoices();
+            }
+        }
+    });
+
+    renderInvoices();
+</script>
+}

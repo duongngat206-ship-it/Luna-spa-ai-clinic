@@ -1,0 +1,149 @@
+@model IEnumerable<GiaoDienSpa.Controllers.DoctorPatientRecord>
+@{
+    ViewData["Title"] = "Bàn Làm Việc Bác Sĩ Chuyên Khoa";
+}
+
+<div class="customer-page">
+
+    <!-- TIÊU ĐỀ BÀN LÀM VIỆC BÁC SĨ -->
+    <div class="customer-page-header">
+        <div>
+            <div class="customer-breadcrumb">
+                <a asp-controller="Home" asp-action="Index" style="text-decoration:none; color:inherit;">LUNA SPA</a> / 🩺 Bàn làm việc Bác sĩ
+            </div>
+            <h1>Bàn Khám & Điều Trị Lâm Sàng Da Liễu</h1>
+            <p>Chào @(ViewBag.DoctorName ?? "Bác sĩ")! Theo dõi hồ sơ bệnh nhân, chỉ định phác đồ công nghệ cao và hội chẩn cùng AI.</p>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a asp-controller="Doctor" asp-action="AiDiagnosis" class="customer-primary-btn" style="text-decoration:none; background: #2b7bb9;">
+                <span>🔬</span> Soi da & Chẩn đoán AI
+            </a>
+            <a asp-controller="Doctor" asp-action="Treatments" class="customer-secondary-btn" style="text-decoration:none;">
+                <span>📋</span> Xem phác đồ mẫu
+            </a>
+        </div>
+    </div>
+
+    <!-- BANNER CẢNH BÁO AI LÂM SÀNG DÀNH RIÊNG CHO BÁC SĨ -->
+    <div class="spa-ai-banner" style="background: linear-gradient(135deg, #f0f7ff 0%, #e6f0fa 100%); border-left: 5px solid #2b7bb9;">
+        <div class="spa-ai-banner-left">
+            <div class="spa-ai-icon-pulse" style="background: #2b7bb9; color: #fff;">🩺</div>
+            <div>
+                <span class="spa-ai-tag" style="background: #2b7bb9; color: #fff;">LUNA AI CLINICAL INTELLIGENCE ALERT</span>
+                <h3 style="color: #1e4a6d;">Cảnh báo tương tác da: 2 ca điều trị cần bác sĩ hội chẩn</h3>
+                <p style="color: #33536e;">
+                    Khách hàng <strong>Nguyễn Thị Minh Anh</strong> có chỉ số nhạy cảm biểu bì <strong>74%</strong> sau buổi Laser thứ 2.
+                    Hệ thống đề xuất: Bác sĩ giảm 10% mức năng lượng xung 1064nm và chỉ định điện di lạnh phục hồi tế bào gốc trước khi cho ra về.
+                </p>
+            </div>
+        </div>
+        <div class="spa-ai-banner-right">
+            <a asp-controller="Doctor" asp-action="AiDiagnosis" class="spa-ai-action-btn" style="background: #2b7bb9; color: #fff; text-decoration:none;">
+                Xem chi tiết phân tích AI ➤
+            </a>
+        </div>
+    </div>
+
+    <!-- 4 THẺ CHỈ SỐ LÂM SÀNG CỦA BÁC SĨ -->
+    <div class="customer-stats">
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon" style="background: #e8f3fb; color: #2b7bb9;">🩺</div>
+            <div>
+                <span class="customer-stat-label">Ca khám trong ngày</span>
+                <strong style="color: #2b7bb9;">@ViewBag.TodayAppointments ca</strong>
+                <small style="color: #16845b; font-weight: 600;">1 ca đã hoàn tất liệu trình</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-purple">✧</div>
+            <div>
+                <span class="customer-stat-label">Phác đồ Laser & Hifu đang chạy</span>
+                <strong style="color: #985c7e;">@ViewBag.ActiveProtocolsCount phác đồ</strong>
+                <small>Tỷ lệ cải thiện lâm sàng: 94.8%</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-orange">⚠️</div>
+            <div>
+                <span class="customer-stat-label">Cảnh báo da nhạy cảm từ AI</span>
+                <strong style="color: #d88a2c;">@ViewBag.AiRiskCount ca cần lưu ý</strong>
+                <small>Cần điều chỉnh bước sóng laser</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-green">💊</div>
+            <div>
+                <span class="customer-stat-label">Dược mỹ phẩm đã kê toa</span>
+                <strong style="color: #278c57;">18 đơn thuốc</strong>
+                <small>Toa dưỡng phục hồi tại nhà</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- DANH SÁCH BỆNH NHÂN KHÁM LÂM SÀNG HÔM NAY -->
+    <div class="customer-table-card" style="margin-top: 24px;">
+        <div class="customer-table-header">
+            <div>
+                <h2 style="font-size: 17px; margin: 0; color: #2b3d51;">Danh Sách Bệnh Nhân & Ca Điều Trị Hôm Nay</h2>
+                <p style="margin: 3px 0 0; font-size: 12.5px; color: #738090;">Chẩn đoán tình trạng da, phác đồ công nghệ cao và phòng điều trị chuyên biệt.</p>
+            </div>
+            <span class="customer-total-badge" style="background: #e8f3fb; color: #2b7bb9;">
+                @Model.Count() ca hẹn bác sĩ
+            </span>
+        </div>
+
+        <div class="customer-table-wrapper">
+            <table class="customer-table">
+                <thead>
+                    <tr>
+                        <th>MÃ & BỆNH NHÂN</th>
+                        <th>CHẨN ĐOÁN LÂM SÀNG</th>
+                        <th>PHÁC ĐỒ CÔNG NGHỆ CAO</th>
+                        <th>GIỜ HẸN & PHÒNG</th>
+                        <th>CẢNH BÁO TỪ LUNA AI</th>
+                        <th>THAO TÁC</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model)
+                    {
+                        <tr>
+                            <td>
+                                <strong style="color: #1e3a58;">@p.PatientName</strong>
+                                <div style="font-size: 11.5px; color: #7a8a9a;">@p.PatientCode • @p.Phone</div>
+                            </td>
+                            <td>
+                                <span style="font-size: 13px; font-weight: 600; color: #334455;">@p.SkinDiagnosis</span>
+                            </td>
+                            <td>
+                                <span class="service-badge-pill" style="background: #e6f2fa; color: #1e5c8e; font-size: 11px;">
+                                    @p.CurrentProtocol
+                                </span>
+                            </td>
+                            <td>
+                                <strong style="color: #278c57;">@p.AppointmentTime</strong>
+                                <div style="font-size: 11.5px; color: #777;">@p.Room</div>
+                            </td>
+                            <td style="max-width: 260px;">
+                                <div style="font-size: 11.5px; background: #fff9e6; color: #926c05; padding: 6px 10px; border-radius: 6px; border: 1px solid #fae8a4;">
+                                    @p.AiRiskAlert
+                                </div>
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 6px;">
+                                    <a asp-controller="Doctor" asp-action="AiDiagnosis" class="btn-approve-quick" style="background: #e8f3fb; color: #2b7bb9; border-color: #badcf5; text-decoration: none;">
+                                        🔬 Soi da AI
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

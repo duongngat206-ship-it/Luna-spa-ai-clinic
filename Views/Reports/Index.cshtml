@@ -1,0 +1,468 @@
+@model GiaoDienSpa.Models.ReportViewModel
+@{
+    ViewData["Title"] = "Báo cáo & Phân tích Vận hành";
+}
+
+<div class="customer-page">
+
+    <!-- TIÊU ĐỀ TRANG & NÚT THAO TÁC -->
+    <div class="customer-page-header">
+        <div>
+            <h1>Báo cáo Doanh thu & Phân tích Vận hành</h1>
+            <p>Tổng hợp chỉ số tài chính, tải công suất phòng, hiệu suất chuyên viên và khuyến nghị điều hành từ AI.</p>
+        </div>
+        <div class="customer-header-actions">
+            <!-- Bộ chọn kỳ báo cáo -->
+            <select id="reportRangeFilter" class="customer-filter" style="min-width: 170px;">
+                <option value="today">Hôm nay</option>
+                <option value="this_week">Tuần này</option>
+                <option value="this_month" selected>Tháng này (T10/2026)</option>
+                <option value="this_quarter">Quý 4/2026</option>
+            </select>
+
+            <button class="customer-secondary-btn" id="btnPrintReport" type="button">
+                🖨 In báo cáo
+            </button>
+
+            <button class="customer-primary-btn" id="btnOpenExportModal" type="button">
+                📥 Xuất Excel / PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- BANNER TRỢ LÝ PHÂN TÍCH TÀI CHÍNH LUNA AI -->
+    <div class="spa-ai-banner">
+        <div class="spa-ai-banner-left">
+            <div class="spa-ai-icon-pulse">📊</div>
+            <div>
+                <span class="spa-ai-tag">LUNA AI EXECUTIVE FINANCIAL AUDIT</span>
+                <h3>Phân tích Tăng trưởng Doanh thu & Đòn bẩy Tối ưu Chi phí</h3>
+                <p>
+                    Doanh thu kỳ này đạt <strong>@Model.Summary.TotalRevenue.ToString("N0") đ</strong> (+@Model.Summary.RevenueGrowthPercent% so với kỳ trước).
+                    Biên lợi nhuận ròng đạt <strong>@Model.Summary.ProfitMargin%</strong>, vượt 4.2% chỉ tiêu định mức.
+                </p>
+            </div>
+        </div>
+        <div class="spa-ai-banner-right">
+            <span class="customer-total-badge" id="reportCurrentPeriod">
+                Kỳ: @Model.SelectedRange
+            </span>
+        </div>
+    </div>
+
+    <!-- 4 THẺ CHỈ SỐ KPI TÀI CHÍNH & VẬN HÀNH -->
+    <div class="customer-stats">
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-purple">₫</div>
+            <div>
+                <span class="customer-stat-label">Tổng doanh thu thực tế</span>
+                <strong style="color: #985c7e;" id="kpiRevenue">@Model.Summary.TotalRevenue.ToString("N0") đ</strong>
+                <small style="color: #278c57; font-weight:600;">+@Model.Summary.RevenueGrowthPercent% so với kỳ trước</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-green">▣</div>
+            <div>
+                <span class="customer-stat-label">Lịch hẹn hoàn thành</span>
+                <strong style="color: #278c57;" id="kpiAppointments">@Model.Summary.SuccessfulAppointments / @Model.Summary.TotalAppointments ca</strong>
+                <small>Tỷ lệ hoàn thành: @Model.Summary.CompletionRate%</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-orange">♙</div>
+            <div>
+                <span class="customer-stat-label">Khách hàng mới & Tỷ lệ VIP</span>
+                <strong style="color: #d88a2c;" id="kpiCustomers">+@Model.Summary.TotalNewCustomers khách</strong>
+                <small>Hội viên VIP chiếm @Model.Summary.VipCustomerRatio%</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-blue">⚖</div>
+            <div>
+                <span class="customer-stat-label">Lợi nhuận ròng (EBITDA)</span>
+                <strong style="color: #1e598f;" id="kpiProfit">@Model.Summary.NetProfit.ToString("N0") đ</strong>
+                <small>Biên lợi nhuận: @Model.Summary.ProfitMargin%</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- HÀNG 1: BIỂU ĐỒ DOANH THU 6 THÁNG & CƠ CẤU DỊCH VỤ -->
+    <div class="report-grid-2col">
+
+        <!-- BIỂU ĐỒ DOANH THU CỘT THEO THÁNG -->
+        <div class="report-chart-container">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                <div>
+                    <h2 style="font-size: 16px; font-weight: 750; color: #302b31; margin: 0 0 3px;">
+                        Biểu đồ tăng trưởng doanh thu 6 tháng gần nhất
+                    </h2>
+                    <p style="margin: 0; font-size: 12px; color: #8c8490;">
+                        So sánh thực thu và chỉ tiêu kinh doanh được giao.
+                    </p>
+                </div>
+                <span class="spa-ai-tag">TĂNG TRƯỞNG ĐỀU</span>
+            </div>
+
+            <!-- Cột biểu đồ CSS tinh xảo -->
+            <div class="report-bars-flex" id="revenueBarsContainer">
+                @foreach (var bar in Model.MonthlyRevenues)
+                {
+                    var maxRev = 150000000m;
+                    var heightPercent = Math.Min(Math.Max((int)((bar.Revenue / maxRev) * 100), 20), 100);
+
+                    <div class="report-bar-col">
+                        <div class="report-bar-fill-wrap">
+                            <div class="report-bar-fill" style="height: @heightPercent%;">
+                                <div class="report-bar-val">@(Math.Round(bar.Revenue / 1000000, 1)) tr</div>
+                            </div>
+                        </div>
+                        <div class="report-bar-month">@bar.MonthName</div>
+                    </div>
+                }
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; font-size:11.5px; color:#8c8490;">
+                <div><span>✦ Đơn vị: Triệu VNĐ</span></div>
+                <div style="display:flex; gap:16px;">
+                    <span style="display:inline-flex; align-items:center; gap:6px;">
+                        <span style="width:10px; height:10px; background:#a76d8e; border-radius:2px;"></span> Thực thu
+                    </span>
+                    <span style="display:inline-flex; align-items:center; gap:6px;">
+                        <span style="width:10px; height:2px; background:#278c57;"></span> Đạt @Model.MonthlyRevenues.Last().PercentAchieved% kế hoạch
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CƠ CẤU DOANH THU THEO NHÓM DỊCH VỤ -->
+        <div class="report-chart-container">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px;">
+                <div>
+                    <h2 style="font-size: 16px; font-weight: 750; color: #302b31; margin: 0 0 3px;">
+                        Cơ cấu doanh thu theo nhóm dịch vụ
+                    </h2>
+                    <p style="margin: 0; font-size: 12px; color: #8c8490;">
+                        Tỷ trọng đóng góp vào giỏ hàng tổng thể.
+                    </p>
+                </div>
+                <span class="skin-badge">4 NHÓM DANH MỤC</span>
+            </div>
+
+            <div id="categoryProgressContainer">
+                @foreach (var cat in Model.CategoryRevenues)
+                {
+                    <div class="category-stat-row">
+                        <div class="category-stat-meta">
+                            <span style="display:flex; align-items:center; gap:6px; font-weight:600; color:#382d47;">
+                                <span>@cat.Icon</span> @cat.CategoryName
+                            </span>
+                            <strong style="color: #985c7e;">
+                                @cat.Revenue.ToString("N0") đ (@cat.Percentage%)
+                            </strong>
+                        </div>
+                        <div class="category-progress-track">
+                            <div class="category-progress-bar" style="width: @cat.Percentage%; background: @cat.ColorHex;"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div style="background: #fdf8fb; border: 1px dashed #ebd8e6; border-radius: 10px; padding: 12px 14px; margin-top: 20px; font-size: 12px; color: #73576c; line-height: 1.5;">
+                💡 <strong>Nhận định kinh doanh:</strong> Dịch vụ <em>Laser Pico & Hifu</em> tạo ra hơn nửa tổng doanh thu và là nam châm kéo bán lẻ mỹ phẩm tại quầy.
+            </div>
+        </div>
+
+    </div>
+
+    <!-- HÀNG 2: XẾP HẠNG KTV / BÁC SĨ & ĐỘ PHỦ PHÒNG TRỊ LIỆU -->
+    <div class="report-grid-2col">
+
+        <!-- BẢNG HIỆU SUẤT CHUYÊN VIÊN -->
+        <div class="customer-content-card" style="margin-bottom: 0;">
+            <div class="customer-content-heading">
+                <div>
+                    <h2>Bảng xếp hạng hiệu suất Bác sĩ & Kỹ thuật viên</h2>
+                    <p>Theo dõi số lượt phục vụ, đóng góp doanh số và mức độ hài lòng của khách.</p>
+                </div>
+                <span class="customer-total-badge">Top 5 Nhân sự</span>
+            </div>
+
+            <div class="customer-table-wrap">
+                <table class="customer-table">
+                    <thead>
+                        <tr>
+                            <th>CHUYÊN VIÊN</th>
+                            <th>VỊ TRÍ</th>
+                            <th style="text-align: center;">SỐ CA</th>
+                            <th style="text-align: right;">DOANH SỐ</th>
+                            <th style="text-align: center;">ĐÁNH GIÁ</th>
+                            <th>THƯỞNG HIỆU SUẤT</th>
+                        </tr>
+                    </thead>
+                    <tbody id="staffTableBody">
+                        @foreach (var staff in Model.StaffPerformances)
+                        {
+                            var initials = string.Join("", staff.StaffName.Split(' ', StringSplitOptions.RemoveEmptyEntries).TakeLast(2).Select(w => w[0])).ToUpper();
+
+                            <tr>
+                                <td>
+                                    <div class="customer-person">
+                                        <div class="customer-avatar">@initials</div>
+                                        <div>
+                                            <strong>@staff.StaffName</strong>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span style="font-size:12px; color:#5c4e68;">@staff.Position</span></td>
+                                <td style="text-align: center;">
+                                    <strong style="color: #382c47;">@staff.CompletedServices</strong>
+                                </td>
+                                <td style="text-align: right;">
+                                    <strong style="color: #985c7e;">@staff.RevenueContribution.ToString("N0") đ</strong>
+                                </td>
+                                <td style="text-align: center;">
+                                    <span style="color:#d88a2c; font-weight:700;">★ @staff.CustomerRating</span>
+                                </td>
+                                <td>
+                                    <span class="skin-badge">@staff.CommissionTier</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- CÔNG SUẤT LẤP ĐẦY PHÒNG TRỊ LIỆU -->
+        <div class="customer-content-card" style="margin-bottom: 0;">
+            <div class="customer-content-heading">
+                <div>
+                    <h2>Công suất phòng & Khung giờ cao điểm</h2>
+                    <p>Theo dõi hiệu suất vận hành từng phòng trị liệu.</p>
+                </div>
+                <span class="spa-ai-tag">KIỂM SOÁT TẢI</span>
+            </div>
+
+            <div style="padding: 18px 24px;">
+                <div id="roomOccupancyList" style="display:flex; flex-direction:column; gap:16px;">
+                    @foreach (var room in Model.RoomOccupancies)
+                    {
+                        var isHigh = room.OccupancyRate >= 85;
+                        var badgeClass = isHigh ? "occupancy-high" : "occupancy-opt";
+
+                        <div style="background:#fdfafc; border:1px solid #eee7ed; border-radius:12px; padding:14px 16px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                <strong style="color:#382d49; font-size:13px;">@room.RoomName</strong>
+                                <span class="occupancy-badge @badgeClass">@room.OccupancyRate% công suất</span>
+                            </div>
+                            <div class="category-progress-track" style="height:6px; margin-bottom:8px;">
+                                <div class="category-progress-bar" style="width: @room.OccupancyRate%; background: @(isHigh ? "#a76d8e" : "#43ae76");"></div>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; font-size:11.5px; color:#857891;">
+                                <span>Thời gian hoạt động: <strong>@room.TotalHoursBooked giờ</strong></span>
+                                <span>Cao điểm: <strong style="color:#a76d8e;">@room.PeakHour</strong></span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- HÀNG 3: NHẬT KÝ GIAO DỊCH GẦN ĐÂY -->
+    <div class="customer-content-card" style="margin-top: 24px;">
+        <div class="customer-content-heading">
+            <div>
+                <h2>Nhật ký thanh toán & Doanh thu chi tiết</h2>
+                <p>Chi tiết các giao dịch hoàn tất phát sinh gần nhất.</p>
+            </div>
+            <a asp-controller="Invoices" asp-action="Index" class="customer-secondary-btn" style="text-decoration:none;">
+                Xem tất cả hóa đơn →
+            </a>
+        </div>
+
+        <div class="customer-table-wrap">
+            <table class="customer-table">
+                <thead>
+                    <tr>
+                        <th>MÃ GIAO DỊCH</th>
+                        <th>KHÁCH HÀNG</th>
+                        <th>DỊCH VỤ / SẢN PHẨM</th>
+                        <th>HÌNH THỨC</th>
+                        <th>THỜI GIAN</th>
+                        <th style="text-align: right;">SỐ TIỀN</th>
+                        <th style="text-align: center;">TRẠNG THÁI</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var tx in Model.RecentTransactions)
+                    {
+                        <tr>
+                            <td>
+                                <span class="invoice-code-badge">@tx.Code</span>
+                            </td>
+                            <td>
+                                <strong style="color:#382d47;">@tx.CustomerName</strong>
+                            </td>
+                            <td>
+                                <span style="font-size:12.5px; color:#5c4e68;">@tx.ServiceSummary</span>
+                            </td>
+                            <td>
+                                <span class="payment-method-tag">@tx.PaymentMethod</span>
+                            </td>
+                            <td>
+                                <span style="font-size:11.5px; color:#8c8296;">@tx.Date.ToString("dd/MM/yyyy HH:mm")</span>
+                            </td>
+                            <td style="text-align: right;">
+                                <strong style="color: #985c7e; font-size: 13.5px;">@tx.Amount.ToString("N0") đ</strong>
+                            </td>
+                            <td style="text-align: center;">
+                                <span class="customer-status status-active">
+                                    <i></i>@tx.Status
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- MODAL XUẤT BÁO CÁO (EXPORT MODAL) -->
+<div class="customer-modal-backdrop" id="exportReportModal">
+    <div class="customer-modal" style="max-width: 520px;">
+        <div class="customer-modal-header">
+            <div>
+                <h2>Xuất báo cáo tài chính & hoạt động</h2>
+                <p>Chọn định dạng và phạm vi dữ liệu để tải về.</p>
+            </div>
+            <button type="button" class="customer-modal-close" id="closeExportModal">×</button>
+        </div>
+
+        <form id="exportReportForm">
+            <div style="padding: 22px 24px;">
+                <div class="customer-form-group" style="margin-bottom: 14px;">
+                    <label for="exportFormat">Định dạng tệp tải về</label>
+                    <select id="exportFormat">
+                        <option value="excel">Microsoft Excel (.xlsx) - Đầy đủ bảng biểu & số liệu</option>
+                        <option value="pdf">Tài liệu PDF (.pdf) - Bản trình bày chuẩn Ban Giám Đốc</option>
+                        <option value="csv">Tệp CSV (.csv) - Dữ liệu thô phân tích</option>
+                    </select>
+                </div>
+
+                <div class="customer-form-group" style="margin-bottom: 14px;">
+                    <label for="exportScope">Phạm vi thời gian</label>
+                    <select id="exportScope">
+                        <option value="this_month">Tháng hiện tại (Tháng 10/2026)</option>
+                        <option value="this_quarter">Quý hiện tại (Quý 4/2026)</option>
+                        <option value="this_year">Cả năm 2026</option>
+                    </select>
+                </div>
+
+                <div style="background: #fdfafc; border: 1px solid #eee7ed; border-radius: 9px; padding: 12px 14px; font-size: 12px; color: #625771; line-height: 1.5;">
+                    ✦ Báo cáo bao gồm: Doanh thu thực tế, Cơ cấu dịch vụ, Bảng lương thưởng chuyên viên và Độ phủ phòng trị liệu.
+                </div>
+            </div>
+
+            <div class="customer-modal-footer">
+                <button type="button" class="customer-secondary-btn" id="cancelExportBtn">Hủy</button>
+                <button type="submit" class="customer-primary-btn" id="confirmExportBtn">
+                    📥 Tải xuống tệp báo cáo
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const rangeFilter = document.getElementById("reportRangeFilter");
+            const btnPrintReport = document.getElementById("btnPrintReport");
+            const btnOpenExportModal = document.getElementById("btnOpenExportModal");
+            const exportModal = document.getElementById("exportReportModal");
+            const closeExportModal = document.getElementById("closeExportModal");
+            const cancelExportBtn = document.getElementById("cancelExportBtn");
+            const exportForm = document.getElementById("exportReportForm");
+
+            // KPI elements
+            const kpiRevenue = document.getElementById("kpiRevenue");
+            const kpiAppointments = document.getElementById("kpiAppointments");
+            const kpiCustomers = document.getElementById("kpiCustomers");
+            const kpiProfit = document.getElementById("kpiProfit");
+            const reportCurrentPeriod = document.getElementById("reportCurrentPeriod");
+
+            function formatCurrency(val) {
+                return Number(val).toLocaleString("vi-VN") + " đ";
+            }
+
+            // Lọc dữ liệu báo cáo động theo thời gian
+            rangeFilter.addEventListener("change", async function () {
+                const range = this.value;
+
+                try {
+                    const response = await fetch(`/Reports/GetFilteredReport?range=${encodeURIComponent(range)}`);
+                    const res = await response.json();
+
+                    if (res.success && res.data) {
+                        const d = res.data;
+                        const s = d.summary;
+
+                        kpiRevenue.textContent = formatCurrency(s.totalRevenue);
+                        kpiAppointments.textContent = `${s.successfulAppointments} / ${s.totalAppointments} ca`;
+                        kpiCustomers.textContent = `+${s.totalNewCustomers} khách`;
+                        kpiProfit.textContent = formatCurrency(s.netProfit);
+                        reportCurrentPeriod.textContent = `Kỳ: ${d.selectedRange}`;
+                    }
+                } catch (err) {
+                    console.error("Lỗi khi tải dữ liệu báo cáo:", err);
+                }
+            });
+
+            // In báo cáo
+            btnPrintReport.addEventListener("click", function () {
+                window.print();
+            });
+
+            // Mở modal xuất file
+            btnOpenExportModal.addEventListener("click", function () {
+                exportModal.classList.add("show");
+            });
+
+            function closeExport() {
+                exportModal.classList.remove("show");
+            }
+
+            closeExportModal.addEventListener("click", closeExport);
+            cancelExportBtn.addEventListener("click", closeExport);
+
+            exportModal.addEventListener("click", function (e) {
+                if (e.target === exportModal) closeExport();
+            });
+
+            // Xử lý xuất file
+            exportForm.addEventListener("submit", async function (e) {
+                e.preventDefault();
+                const fmt = document.getElementById("exportFormat").value;
+
+                try {
+                    const response = await fetch(`/Reports/ExportReport?format=${encodeURIComponent(fmt)}`);
+                    const res = await response.json();
+
+                    if (res.success) {
+                        alert(`Xuất báo cáo thành công!\nTên tệp: ${res.fileName}\n(Đã hoàn tất đóng gói dữ liệu số liệu)`);
+                        closeExport();
+                    }
+                } catch (err) {
+                    alert("Có lỗi khi tạo tệp báo cáo.");
+                }
+            });
+        });
+    </script>
+}

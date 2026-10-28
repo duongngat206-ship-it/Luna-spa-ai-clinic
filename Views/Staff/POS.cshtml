@@ -1,0 +1,306 @@
+@{
+    ViewData["Title"] = "Trạm Thu Ngân POS & Dược Mỹ Phẩm Tại Quầy";
+}
+
+<div class="staff-pos-page">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="fas fa-cash-register text-teal me-2"></i> Trạm Thu Ngân POS & Dược Mỹ Phẩm</h3>
+            <p class="text-muted mb-0">Thanh toán dịch vụ spa, bán lẻ sản phẩm chăm sóc da và xuất hóa đơn điện tử VietQR</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Staff/Dashboard" class="btn btn-outline-secondary rounded-pill px-3">
+                <i class="fas fa-arrow-left me-1"></i> Bàn làm việc KTV
+            </a>
+            <a href="/Invoices" class="btn btn-outline-teal rounded-pill px-3">
+                <i class="fas fa-file-invoice-dollar me-1"></i> Sổ hóa đơn
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Danh mục sản phẩm & Dịch vụ -->
+        <div class="col-lg-7">
+            <div class="card border-0 rounded-4 shadow-sm p-4 bg-white mb-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                    <ul class="nav nav-pills gap-2" id="posFilterTabs">
+                        <li class="nav-item">
+                            <button class="nav-link active rounded-pill px-3" onclick="filterPOS('all')">Tất cả</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link rounded-pill px-3" onclick="filterPOS('service')">Dịch Vụ Spa</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link rounded-pill px-3" onclick="filterPOS('product')">Dược Mỹ Phẩm</button>
+                        </li>
+                    </ul>
+                    <div class="w-50">
+                        <input type="text" id="posSearchInput" class="form-control rounded-pill form-control-sm" placeholder="Tìm sản phẩm, dịch vụ..." onkeyup="searchPOS()" />
+                    </div>
+                </div>
+
+                <div class="row g-3" id="posCatalog">
+                    <!-- Item 1 -->
+                    <div class="col-md-6 pos-item" data-type="service" data-name="Aqua Detox Cấp Ẩm Đa Tầng">
+                        <div class="card h-100 rounded-3 border p-3 hover-shadow cursor-pointer" onclick="addToCart('Aqua Detox Cấp Ẩm', 650000, 'Dịch vụ')">
+                            <span class="badge bg-teal text-white w-auto align-self-start rounded-pill px-2 py-1 mb-2">Dịch vụ</span>
+                            <h6 class="fw-bold mb-1">Aqua Detox Cấp Ẩm</h6>
+                            <div class="text-muted small">Thời gian: 45 phút - Hút bã nhờn sủi oxy</div>
+                            <div class="mt-2 fw-bold text-teal fs-6">650,000 đ</div>
+                        </div>
+                    </div>
+
+                    <!-- Item 2 -->
+                    <div class="col-md-6 pos-item" data-type="service" data-name="Laser Pico Trị Tàn Nhang">
+                        <div class="card h-100 rounded-3 border p-3 hover-shadow cursor-pointer" onclick="addToCart('Laser Pico Trị Nám', 1800000, 'Dịch vụ')">
+                            <span class="badge bg-teal text-white w-auto align-self-start rounded-pill px-2 py-1 mb-2">Dịch vụ</span>
+                            <h6 class="fw-bold mb-1">Laser Pico Trị Nám</h6>
+                            <div class="text-muted small">Xung pico giây chuẩn FDA - Bước sóng 1064nm</div>
+                            <div class="mt-2 fw-bold text-teal fs-6">1,800,000 đ</div>
+                        </div>
+                    </div>
+
+                    <!-- Item 3 -->
+                    <div class="col-md-6 pos-item" data-type="service" data-name="Nâng Cơ Trẻ Hóa Hifu">
+                        <div class="card h-100 rounded-3 border p-3 hover-shadow cursor-pointer" onclick="addToCart('Nâng Cơ Hifu Collagen', 3200000, 'Dịch vụ')">
+                            <span class="badge bg-teal text-white w-auto align-self-start rounded-pill px-2 py-1 mb-2">Dịch vụ</span>
+                            <h6 class="fw-bold mb-1">Nâng Cơ Hifu Collagen</h6>
+                            <div class="text-muted small">Sóng siêu âm hội tụ vi điểm đầu Tip 3.0 & 4.5mm</div>
+                            <div class="mt-2 fw-bold text-teal fs-6">3,200,000 đ</div>
+                        </div>
+                    </div>
+
+                    <!-- Item 4 -->
+                    <div class="col-md-6 pos-item" data-type="product" data-name="Serum Hyaluronic Acid B5 Cấp Ẩm">
+                        <div class="card h-100 rounded-3 border p-3 hover-shadow cursor-pointer" onclick="addToCart('Serum HA B5 Phục Hồi', 890000, 'Mỹ phẩm')">
+                            <span class="badge bg-primary text-white w-auto align-self-start rounded-pill px-2 py-1 mb-2">Mỹ phẩm</span>
+                            <h6 class="fw-bold mb-1">Serum HA B5 Phục Hồi</h6>
+                            <div class="text-muted small">Chai 50ml nhập khẩu Pháp - Làm dịu cấp ẩm</div>
+                            <div class="mt-2 fw-bold text-primary fs-6">890,000 đ</div>
+                        </div>
+                    </div>
+
+                    <!-- Item 5 -->
+                    <div class="col-md-6 pos-item" data-type="product" data-name="Kem Chống Nắng Phổ Rộng SPF50+">
+                        <div class="card h-100 rounded-3 border p-3 hover-shadow cursor-pointer" onclick="addToCart('Kem Chống Nắng SPF50+', 650000, 'Mỹ phẩm')">
+                            <span class="badge bg-primary text-white w-auto align-self-start rounded-pill px-2 py-1 mb-2">Mỹ phẩm</span>
+                            <h6 class="fw-bold mb-1">Kem Chống Nắng SPF50+</h6>
+                            <div class="text-muted small">Kháng tia UV & Ánh sáng xanh HEV</div>
+                            <div class="mt-2 fw-bold text-primary fs-6">650,000 đ</div>
+                        </div>
+                    </div>
+
+                    <!-- Item 6 -->
+                    <div class="col-md-6 pos-item" data-type="product" data-name="Mặt Nạ Tế Bào Gốc Sinh Học">
+                        <div class="card h-100 rounded-3 border p-3 hover-shadow cursor-pointer" onclick="addToCart('Hộp Mặt Nạ TBG (5 miếng)', 520000, 'Mỹ phẩm')">
+                            <span class="badge bg-primary text-white w-auto align-self-start rounded-pill px-2 py-1 mb-2">Mỹ phẩm</span>
+                            <h6 class="fw-bold mb-1">Mặt Nạ TBG (5 miếng)</h6>
+                            <div class="text-muted small">Làm dịu da tức thì sau laser/peel</div>
+                            <div class="mt-2 fw-bold text-primary fs-6">520,000 đ</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hóa đơn tính tiền POS -->
+        <div class="col-lg-5">
+            <div class="card border-0 rounded-4 shadow-sm p-4 bg-white sticky-top" style="top: 20px;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-shopping-cart text-teal me-2"></i> Hóa Đơn Thu Ngân</h5>
+                    <span class="badge bg-teal text-white rounded-pill px-3 py-1 font-monospace" id="posOrderTime">LUNA-POS</span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Khách hàng thanh toán:</label>
+                    <div class="input-group">
+                        <input type="text" id="posCustName" class="form-control form-control-sm" value="Nguyễn Thị Minh Anh" />
+                        <span class="input-group-text bg-light">
+                            <input class="form-check-input mt-0 me-1" type="checkbox" id="posVipCheck" checked onchange="renderCart()" />
+                            <small class="fw-bold text-warning">VIP (-10%)</small>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Danh sách sản phẩm trong giỏ -->
+                <div class="border rounded-3 p-2 mb-3 bg-light" style="max-height: 220px; overflow-y: auto;">
+                    <div id="cartItemsList" class="d-flex flex-column gap-2">
+                        <div class="text-muted small text-center py-4">Chưa chọn dịch vụ / sản phẩm nào</div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mb-2 small">
+                    <span class="text-muted">Tạm tính (Subtotal):</span>
+                    <span class="fw-bold" id="posSubtotal">0 đ</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2 small">
+                    <span class="text-muted">Chiết khấu thẻ Diamond VIP (10%):</span>
+                    <span class="text-success fw-bold" id="posDiscount">0 đ</span>
+                </div>
+                <div class="d-flex justify-content-between mb-3 border-top pt-2">
+                    <span class="fw-bold fs-5">TỔNG CỘNG:</span>
+                    <span class="fw-bold fs-5 text-teal" id="posTotal">0 đ</span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Phương thức thanh toán:</label>
+                    <select class="form-select form-select-sm" id="posPaymentMethod" onchange="toggleVietQRBox()">
+                        <option value="VietQR" selected>Chuyển khoản VietQR tức thì (Khuyên dùng)</option>
+                        <option value="TienMat">Thanh toán Tiền mặt tại quầy</option>
+                        <option value="TheNganHang">Quẹt thẻ máy POS ngân hàng</option>
+                        <option value="LunaPoint">Trừ điểm thưởng Luna Points</option>
+                    </select>
+                </div>
+
+                <!-- Khung hiển thị mã QR VietQR tự động -->
+                <div id="vietqrBox" class="p-3 rounded-4 bg-light border text-center mb-3">
+                    <div class="small fw-bold text-teal mb-2"><i class="fas fa-qrcode me-1"></i> Quét Mã VietQR Để Thanh Toán Nhanh</div>
+                    <div class="d-inline-block p-2 bg-white rounded-3 shadow-sm border mb-2">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=2vnpay-lunaspa-pos" id="vietqrImage" style="width: 140px; height: 140px;" alt="VietQR Code" />
+                    </div>
+                    <div class="small text-muted font-monospace">STK: 1903.8899.8899 - Techcombank (LUNA CLINIC)</div>
+                    <div class="small text-teal fw-bold font-monospace" id="vietqrMemo">CK: LUNA POS THANH TOAN</div>
+                </div>
+
+                <button class="btn btn-teal w-100 py-2 rounded-pill fw-bold shadow-sm" onclick="processCheckout()">
+                    <i class="fas fa-file-invoice-dollar me-1"></i> Xác Nhận Thanh Toán & Xuất Hóa Đơn
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let cart = [
+    { name: 'Laser Pico Trị Nám', price: 1800000, type: 'Dịch vụ', qty: 1 },
+    { name: 'Serum HA B5 Phục Hồi', price: 890000, type: 'Mỹ phẩm', qty: 1 }
+];
+
+document.addEventListener('DOMContentLoaded', () => {
+    renderCart();
+});
+
+function addToCart(name, price, type) {
+    const existing = cart.find(i => i.name === name);
+    if (existing) {
+        existing.qty += 1;
+    } else {
+        cart.push({ name, price, type, qty: 1 });
+    }
+    renderCart();
+}
+
+function removeFromCart(index) {
+    cart.splice(index, 1);
+    renderCart();
+}
+
+function renderCart() {
+    const list = document.getElementById('cartItemsList');
+    if (cart.length === 0) {
+        list.innerHTML = '<div class="text-muted small text-center py-4">Chưa chọn dịch vụ / sản phẩm nào</div>';
+        document.getElementById('posSubtotal').innerText = '0 đ';
+        document.getElementById('posDiscount').innerText = '0 đ';
+        document.getElementById('posTotal').innerText = '0 đ';
+        return;
+    }
+
+    let subtotal = 0;
+    list.innerHTML = cart.map((item, idx) => {
+        subtotal += item.price * item.qty;
+        return `
+            <div class="d-flex justify-content-between align-items-center bg-white p-2 rounded border small">
+                <div>
+                    <div class="fw-bold">${item.name}</div>
+                    <div class="text-muted">${item.price.toLocaleString('vi-VN')} đ x ${item.qty}</div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fw-bold text-teal">${(item.price * item.qty).toLocaleString('vi-VN')} đ</span>
+                    <button class="btn btn-xs text-danger border-0 p-0" onclick="removeFromCart(${idx})"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    const isVip = document.getElementById('posVipCheck').checked;
+    const discount = isVip ? Math.round(subtotal * 0.1) : 0;
+    const total = subtotal - discount;
+
+    document.getElementById('posSubtotal').innerText = subtotal.toLocaleString('vi-VN') + ' đ';
+    document.getElementById('posDiscount').innerText = '- ' + discount.toLocaleString('vi-VN') + ' đ';
+    document.getElementById('posTotal').innerText = total.toLocaleString('vi-VN') + ' đ';
+
+    const cust = document.getElementById('posCustName').value || 'KHACH';
+    document.getElementById('vietqrMemo').innerText = `ND: ${cust.toUpperCase()} POS ${total.toLocaleString('vi-VN')}D`;
+}
+
+function toggleVietQRBox() {
+    const method = document.getElementById('posPaymentMethod').value;
+    const box = document.getElementById('vietqrBox');
+    if (method === 'VietQR') {
+        box.style.display = 'block';
+    } else {
+        box.style.display = 'none';
+    }
+}
+
+async function processCheckout() {
+    if (cart.length === 0) {
+        alert('Giỏ hàng đang trống!');
+        return;
+    }
+
+    const cust = document.getElementById('posCustName').value || 'Khách lẻ tại quầy';
+    const isVip = document.getElementById('posVipCheck').checked;
+    const method = document.getElementById('posPaymentMethod').value;
+
+    try {
+        const res = await fetch('/Staff/ProcessPOSOrder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                CustomerName: cust,
+                IsVipMember: isVip,
+                PaymentMethod: method,
+                Items: cart
+            })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            alert(`✓ ${data.message}\n\nMã đơn: ${data.orderCode}\nKhách hàng: ${data.customerName}\nTổng tiền: ${data.finalTotal.toLocaleString('vi-VN')} đ\nPhương thức: ${data.paymentMethod}`);
+            cart = [];
+            renderCart();
+        } else {
+            alert(data.message || 'Lỗi thanh toán');
+        }
+    } catch(err) {
+        console.error(err);
+        alert('Có lỗi xảy ra khi xử lý thanh toán.');
+    }
+}
+
+function filterPOS(type) {
+    const items = document.querySelectorAll('.pos-item');
+    items.forEach(el => {
+        if (type === 'all' || el.getAttribute('data-type') === type) {
+            el.style.display = '';
+        } else {
+            el.style.display = 'none';
+        }
+    });
+}
+
+function searchPOS() {
+    const term = document.getElementById('posSearchInput').value.toLowerCase();
+    const items = document.querySelectorAll('.pos-item');
+    items.forEach(el => {
+        const name = el.getAttribute('data-name').toLowerCase();
+        if (name.includes(term)) {
+            el.style.display = '';
+        } else {
+            el.style.display = 'none';
+        }
+    });
+}
+</script>

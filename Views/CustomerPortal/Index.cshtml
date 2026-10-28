@@ -1,0 +1,246 @@
+@model List<GiaoDienSpa.Controllers.CustomerAppointmentItem>
+@{
+    ViewData["Title"] = "Cổng Hội Viên VIP - Luna Beauty Club";
+    var nextApp = Model.FirstOrDefault(a => a.Status == "Đã xác nhận");
+    var voucherCount = ViewBag.AvailableVouchersCount ?? 2;
+}
+
+<div class="customer-portal">
+    <!-- VIP Membership Card Header -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+            <div class="card border-0 rounded-4 shadow-lg p-4 text-white position-relative overflow-hidden" 
+                 style="background: linear-gradient(135deg, #090d16 0%, #1e293b 50%, #334155 100%); min-height: 250px; border: 1px solid rgba(251, 191, 36, 0.3) !important;">
+                <!-- Decorative background elements -->
+                <div style="position: absolute; right: -40px; bottom: -40px; width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle, rgba(217, 119, 6, 0.25) 0%, transparent 70%);"></div>
+                <div style="position: absolute; top: 20px; right: 25px; opacity: 0.12; font-size: 5rem;"><i class="fas fa-crown"></i></div>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fs-4 fw-bold text-amber-400" style="color: #fbbf24;"><i class="fas fa-crown me-1"></i> LUNA VIP CLUB</span>
+                        <span class="badge bg-warning text-dark fw-bold rounded-pill px-2 py-1 small">DIAMOND MEMBER</span>
+                    </div>
+                    <div class="bg-white p-1 rounded-2 shadow-sm">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=LUNA-VIP-MINHANH" style="width: 45px; height: 45px;" alt="Member QR" title="Đưa nhân viên quét check-in" />
+                    </div>
+                </div>
+
+                <div class="my-auto py-1">
+                    <div class="text-white-50 small text-uppercase" style="letter-spacing: 1px;">Thẻ Hội Viên Số Đặc Quyền</div>
+                    <h3 class="fw-bold mb-1" style="letter-spacing: 0.5px;">@ViewBag.CustomerName</h3>
+                    <div class="small" style="color: #fde68a;">
+                        <i class="fas fa-shield-alt me-1"></i> Hoàn tiền 10% Luna Point mọi hóa đơn • Ưu tiên đặt lịch Bác sĩ CKI
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-end mt-3 pt-3 border-top border-secondary">
+                    <div>
+                        <div class="text-white-50 small">Điểm tích lũy Luna Point</div>
+                        <div class="fs-4 fw-bold text-warning">@ViewBag.RewardPoints <span class="fs-6 text-white-50">điểm (~285.000 đ)</span></div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="/CustomerPortal/Appointments" class="btn btn-sm btn-outline-light rounded-pill px-3">
+                            <i class="fas fa-calendar-plus me-1"></i> Đặt lịch hẹn
+                        </a>
+                        <a href="/CustomerPortal/Vouchers" class="btn btn-sm btn-warning fw-bold rounded-pill px-3">
+                            <i class="fas fa-ticket-alt me-1"></i> Ví Voucher (@voucherCount)
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Next appointment & course progress -->
+        <div class="col-lg-5">
+            <div class="card border-0 rounded-4 shadow-sm p-4 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-calendar-star text-teal me-2"></i> Lịch Hẹn Sắp Tới</h5>
+                    @if (nextApp != null)
+                    {
+                        <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1">Đã chốt lịch</span>
+                    }
+                </div>
+
+                @if (nextApp != null)
+                {
+                    <div class="p-3 rounded-4 mb-3" style="background: #f0fdfa; border: 1px solid #ccfbf1;">
+                        <div class="text-teal fw-bold fs-5 mb-1">
+                            <i class="fas fa-clock me-1"></i> @nextApp.DateTimeStr
+                        </div>
+                        <div class="fw-bold text-dark fs-6 mb-1">@nextApp.ServiceName</div>
+                        <div class="small text-muted mb-1"><i class="fas fa-user-md text-teal me-1"></i> Bác sĩ phụ trách: <strong>@nextApp.DoctorName</strong></div>
+                        <div class="small text-muted"><i class="fas fa-map-marker-alt text-danger me-1"></i> Địa điểm: @nextApp.RoomName</div>
+                        <div class="small text-muted mt-2 fst-italic">" @nextApp.Note "</div>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-muted p-3 bg-light rounded-3 text-center mb-3">Bạn chưa có lịch hẹn sắp tới nào</div>
+                }
+
+                <!-- Liệu trình đang chạy -->
+                <div class="mt-auto">
+                    <div class="d-flex justify-content-between text-muted small fw-bold mb-1">
+                        <span>Liệu trình: @ViewBag.ActiveCourse</span>
+                        <span class="text-teal">Tiến độ 3/5 buổi (60%)</span>
+                    </div>
+                    <div class="progress rounded-pill" style="height: 10px;">
+                        <div class="progress-bar bg-teal progress-bar-striped progress-bar-animated" style="width: 60%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5 Khối chức năng chính của khách hàng -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4 col-lg">
+            <a href="/CustomerPortal/Appointments" class="card border-0 rounded-4 shadow-sm p-3 bg-white text-decoration-none h-100 hover-shadow text-center">
+                <div class="rounded-4 p-3 bg-teal bg-opacity-10 text-teal fs-3 mx-auto mb-2" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <h6 class="fw-bold text-dark mb-1">Lịch Hẹn & Đặt Lịch</h6>
+                <span class="small text-muted">Đặt lịch khám nhanh trực tuyến 24/7</span>
+            </a>
+        </div>
+        <div class="col-md-4 col-lg">
+            <a href="/CustomerPortal/History" class="card border-0 rounded-4 shadow-sm p-3 bg-white text-decoration-none h-100 hover-shadow text-center">
+                <div class="rounded-4 p-3 bg-primary bg-opacity-10 text-primary fs-3 mx-auto mb-2" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-camera-retro"></i>
+                </div>
+                <h6 class="fw-bold text-dark mb-1">Nhật Ký Da AI</h6>
+                <span class="small text-muted">So sánh ảnh quang phổ Trước & Sau</span>
+            </a>
+        </div>
+        <div class="col-md-4 col-lg">
+            <a href="/CustomerPortal/MyPrescriptions" class="card border-0 rounded-4 shadow-sm p-3 bg-white text-decoration-none h-100 hover-shadow text-center">
+                <div class="rounded-4 p-3 bg-success bg-opacity-10 text-success fs-3 mx-auto mb-2" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-prescription-bottle-alt"></i>
+                </div>
+                <h6 class="fw-bold text-dark mb-1">Toa Mỹ Phẩm Tại Nhà</h6>
+                <span class="small text-muted">Routine Sáng/Tối & Habit Tracker</span>
+            </a>
+        </div>
+        <div class="col-md-4 col-lg">
+            <a href="/CustomerPortal/Vouchers" class="card border-0 rounded-4 shadow-sm p-3 bg-white text-decoration-none h-100 hover-shadow text-center">
+                <div class="rounded-4 p-3 bg-warning bg-opacity-10 text-warning fs-3 mx-auto mb-2" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-ticket-alt"></i>
+                </div>
+                <h6 class="fw-bold text-dark mb-1">Ví Voucher & Điểm</h6>
+                <span class="small text-muted">Ưu đãi sinh nhật & Đổi quà</span>
+            </a>
+        </div>
+        <div class="col-md-4 col-lg">
+            <a href="/AI" class="card border-0 rounded-4 shadow-sm p-3 bg-white text-decoration-none h-100 hover-shadow text-center">
+                <div class="rounded-4 p-3 bg-info bg-opacity-10 text-info fs-3 mx-auto mb-2" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h6 class="fw-bold text-dark mb-1">Trợ Lý Luna AI</h6>
+                <span class="small text-muted">Tư vấn cách skincare chuẩn khoa học</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Lịch sử điều trị & Đánh giá trải nghiệm -->
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 rounded-4 shadow-sm p-4 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-history text-teal me-2"></i> Lịch Sử Buổi Trị Liệu Của Bạn</h5>
+                    <a href="/CustomerPortal/Appointments" class="btn btn-sm btn-link text-teal text-decoration-none">Xem toàn bộ</a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Thời gian</th>
+                                <th>Liệu trình</th>
+                                <th>Bác sĩ / KTV</th>
+                                <th>Địa điểm</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var app in Model)
+                            {
+                                <tr>
+                                    <td class="small fw-semibold">@app.DateTimeStr</td>
+                                    <td>
+                                        <div class="fw-bold small">@app.ServiceName</div>
+                                    </td>
+                                    <td class="small text-muted">@app.DoctorName</td>
+                                    <td class="small text-muted">@app.RoomName</td>
+                                    <td>
+                                        @if (app.Status == "Đã hoàn thành")
+                                        {
+                                            <span class="badge bg-success-subtle text-success rounded-pill">@app.Status</span>
+                                        }
+                                        else if (app.Status == "Đã xác nhận")
+                                        {
+                                            <span class="badge bg-primary-subtle text-primary rounded-pill">@app.Status</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary-subtle text-secondary rounded-pill">@app.Status</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 rounded-4 shadow-sm p-4 bg-white h-100">
+                <h5 class="fw-bold mb-3"><i class="fas fa-star text-warning me-2"></i> Đánh Giá Dịch Vụ Vừa Trải Nghiệm</h5>
+                <p class="small text-muted">Ý kiến của Quý khách giúp Luna Clinic không ngừng nâng tầm chất lượng dịch vụ.</p>
+
+                <div class="mb-3 text-center">
+                    <div class="fs-3 text-warning">
+                        <i class="fas fa-star cursor-pointer" onclick="setRating(1)"></i>
+                        <i class="fas fa-star cursor-pointer" onclick="setRating(2)"></i>
+                        <i class="fas fa-star cursor-pointer" onclick="setRating(3)"></i>
+                        <i class="fas fa-star cursor-pointer" onclick="setRating(4)"></i>
+                        <i class="fas fa-star cursor-pointer" onclick="setRating(5)"></i>
+                    </div>
+                    <small class="text-muted" id="ratingText">Tuyệt vời (5/5 sao)</small>
+                </div>
+
+                <div class="mb-3">
+                    <textarea id="reviewText" class="form-control form-control-sm" rows="3" placeholder="Chia sẻ cảm nhận về tay nghề Bác sĩ hoặc KTV..."></textarea>
+                </div>
+
+                <button class="btn btn-teal w-100 py-2 rounded-pill fw-bold shadow-sm" onclick="sendReview()">
+                    <i class="fas fa-paper-plane me-1"></i> Gửi Đánh Giá (+50 Luna Points)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentRate = 5;
+function setRating(val) {
+    currentRate = val;
+    document.getElementById('ratingText').innerText = `${val}/5 sao`;
+}
+
+async function sendReview() {
+    const text = document.getElementById('reviewText').value;
+    try {
+        const res = await fetch('/CustomerPortal/SubmitReview', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rating: currentRate, comment: text })
+        });
+        const data = await res.json();
+        alert(data.message);
+        document.getElementById('reviewText').value = '';
+    } catch(err) {
+        console.error(err);
+    }
+}
+</script>

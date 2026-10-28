@@ -1,0 +1,331 @@
+@model IEnumerable<GiaoDienSpa.Models.Appointment>
+
+@{
+    ViewData["Title"] = "Bảng điều khiển quản trị";
+}
+
+<div class="customer-page dashboard-page">
+
+    <!-- TIÊU ĐỀ TRANG -->
+    <div class="customer-page-header">
+        <div>
+            <div class="customer-breadcrumb">
+                <a asp-controller="Home" asp-action="Index" style="text-decoration:none; color:inherit;">LUNA SPA</a> / Bảng điều khiển quản trị
+            </div>
+            <h1>Tổng quan trung tâm LUNA SPA & AI Clinic</h1>
+            <p>Theo dõi thời gian thực hoạt động kinh doanh, công suất phòng trị liệu và trợ lý điều hành AI.</p>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a asp-controller="Home" asp-action="Index" class="customer-secondary-btn" style="text-decoration:none;">
+                <span>🌐</span> Xem trang chủ khách
+            </a>
+            <button class="spa-ai-btn" id="openAiSummaryModal" type="button">
+                <span>✨</span> AI Báo cáo điều hành
+            </button>
+            <a asp-controller="Appointments" asp-action="Index" class="customer-primary-btn" style="text-decoration:none;">
+                <span>＋</span> Tạo lịch hẹn
+            </a>
+        </div>
+    </div>
+
+    <!-- 4 THẺ CHỈ SỐ KPI ĐIỀU HÀNH -->
+    <div class="customer-stats">
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-purple">₫</div>
+            <div>
+                <span class="customer-stat-label">Doanh thu tháng này</span>
+                <strong style="color: #985c7e;">@(((decimal)(ViewBag.MonthlyRevenue ?? 68500000)).ToString("N0")) đ</strong>
+                <small style="color: #278c57; font-weight: 600;">+@ViewBag.WeeklyGrowthRate% so với tuần trước</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-green">▣</div>
+            <div>
+                <span class="customer-stat-label">Lịch hẹn hôm nay</span>
+                <strong style="color: #278c57;">@ViewBag.TotalAppointments ca</strong>
+                <small>Công suất phòng trị liệu: @ViewBag.RoomOccupancyRate%</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-orange">♙</div>
+            <div>
+                <span class="customer-stat-label">Tổng khách hàng</span>
+                <strong style="color: #d88a2c;">@ViewBag.TotalCustomers</strong>
+                <small>Hồ sơ khách hàng định danh</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-blue">✧</div>
+            <div>
+                <span class="customer-stat-label">Dịch vụ đang phục vụ</span>
+                <strong style="color: #4b8bd7;">@ViewBag.TotalServices phác đồ</strong>
+                <small>Chuẩn công nghệ cao & thư giãn</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI SMART EXECUTIVE BANNER -->
+    <div class="spa-ai-banner">
+        <div class="spa-ai-banner-left">
+            <div class="spa-ai-icon-pulse">✦</div>
+            <div class="spa-ai-content">
+                <span class="spa-ai-tag">✨ TRỢ LÝ ĐIỀU HÀNH TỔNG QUAN LUNA AI</span>
+                <p class="spa-ai-text">
+                    Hiệu suất kinh doanh hôm nay ghi nhận tăng trưởng mạnh ở nhóm dịch vụ <strong>Laser Pico Pro</strong> và <strong>Nâng cơ Hifu</strong>. Khung giờ 16:30 – 19:30 dự kiến kín phòng, hệ thống AI đã tự động phân bổ 3 kỹ thuật viên xuất sắc hỗ trợ ca tối.
+                </p>
+            </div>
+        </div>
+        <button class="spa-ai-btn" id="aiExecutiveBannerBtn" type="button">Xem báo cáo vận hành</button>
+    </div>
+
+    <!-- BỐ CỤC CHÍNH (LỊCH HẸN HÔM NAY + TRỢ LÝ ĐIỀU PHỐI) -->
+    <div class="dashboard-split-grid">
+
+        <!-- CỘT TRÁI: LỊCH HẸN TRONG NGÀY -->
+        <div class="customer-content-card">
+            <div class="customer-content-heading">
+                <div>
+                    <h2>Lịch hẹn trị liệu trong ngày</h2>
+                    <p>Theo dõi tiến độ đón tiếp, phòng dịch vụ và chuyên viên phụ trách.</p>
+                </div>
+                <a asp-controller="Appointments" asp-action="Index" style="text-decoration:none; color:#985c7e; font-size:12px; font-weight:700;">
+                    Xem tất cả lịch hẹn →
+                </a>
+            </div>
+
+            <div class="customer-table-wrap">
+                <table class="customer-table">
+                    <thead>
+                        <tr>
+                            <th>GIỜ HẸN</th>
+                            <th>KHÁCH HÀNG</th>
+                            <th>DỊCH VỤ ĐĂNG KÝ</th>
+                            <th>CHUYÊN VIÊN & PHÒNG</th>
+                            <th>TRẠNG THÁI</th>
+                            <th class="customer-action-heading">CHI TIẾT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var app in Model)
+                        {
+                            var initials = string.Join("", app.CustomerName.Split(' ', StringSplitOptions.RemoveEmptyEntries).TakeLast(2).Select(w => w[0])).ToUpper();
+                            var statusClass = app.Status == "Đang phục vụ" ? "status-inservice" : (app.Status == "Đã xác nhận" ? "status-active" : "status-pending");
+
+                            <tr>
+                                <td>
+                                    <strong style="color: #985c7e; font-size: 14px; font-family: monospace;">@app.AppointmentTime</strong>
+                                    <small style="display:block; color:#958a9f; font-size:11px;">Hôm nay</small>
+                                </td>
+                                <td>
+                                    <div class="customer-person">
+                                        <div class="customer-avatar">@initials</div>
+                                        <div>
+                                            <strong>@app.CustomerName</strong>
+                                            <small>@app.CustomerPhone</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong style="color: #3b2c4e; font-size: 12px;">@app.ServiceName</strong>
+                                    <small style="display:block; color:#958a9f; font-size:11px;">@app.AiReminderStatus</small>
+                                </td>
+                                <td>
+                                    <div style="font-size: 12px; color: #433756; font-weight: 600;">@app.StaffName</div>
+                                    <span class="room-badge" style="margin-top: 3px;">📍 @app.RoomName</span>
+                                </td>
+                                <td>
+                                    <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
+                                        <span class="customer-status @statusClass">
+                                            <i></i>@app.Status
+                                        </span>
+                                        @if (app.Status == "Chờ xác nhận")
+                                        {
+                                            <button type="button" class="btn-approve-quick home-quick-approve" data-id="@app.AppointmentId" title="Duyệt lịch hẹn này ngay lập tức">
+                                                ✓ Duyệt
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="customer-row-actions">
+                                        <a asp-controller="Appointments" asp-action="Index" title="Xem chi tiết lịch hẹn" style="text-decoration:none; display:grid; place-items:center;">
+                                            <button type="button">◉</button>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- CỘT PHẢI: TRUY CẬP NHANH & ĐỀ XUẤT AI -->
+        <div style="display: flex; flex-direction: column; gap: 18px;">
+
+            <!-- TRUY CẬP NHANH -->
+            <div class="customer-content-card" style="padding: 20px;">
+                <h3 style="margin: 0 0 14px; font-size: 16px; color: #302744;">Truy cập nhanh nghiệp vụ</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <a asp-controller="Customers" asp-action="Index" class="dashboard-quick-card">
+                        <div class="dashboard-quick-icon">♙</div>
+                        <div>
+                            <strong style="font-size: 13px;">Khách hàng</strong>
+                            <small style="display:block; color:#958a9f; font-size:11px;">142 hồ sơ</small>
+                        </div>
+                    </a>
+
+                    <a asp-controller="Services" asp-action="Index" class="dashboard-quick-card">
+                        <div class="dashboard-quick-icon">✧</div>
+                        <div>
+                            <strong style="font-size: 13px;">Dịch vụ Spa</strong>
+                            <small style="display:block; color:#958a9f; font-size:11px;">12 gói liệu trình</small>
+                        </div>
+                    </a>
+
+                    <a asp-controller="Invoices" asp-action="Index" class="dashboard-quick-card">
+                        <div class="dashboard-quick-icon">▧</div>
+                        <div>
+                            <strong style="font-size: 13px;">Hóa đơn</strong>
+                            <small style="display:block; color:#958a9f; font-size:11px;">In biên lai thu ngân</small>
+                        </div>
+                    </a>
+
+                    <a asp-controller="Inventory" asp-action="Index" class="dashboard-quick-card">
+                        <div class="dashboard-quick-icon">▤</div>
+                        <div>
+                            <strong style="font-size: 13px;">Kho mỹ phẩm</strong>
+                            <small style="display:block; color:#958a9f; font-size:11px;">Kiểm kê tồn kho</small>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- GỢI Ý ĐIỀU HÀNH TỪ AI -->
+            <div class="customer-content-card" style="padding: 20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px;">
+                    <h3 style="margin: 0; font-size: 16px; color: #302744;">Nhiệm vụ AI khuyến nghị hôm nay</h3>
+                    <span class="spa-ai-tag">CẦN XỬ LÝ</span>
+                </div>
+
+                <div class="ai-insight-box">
+                    <strong style="color: #985c7e;">1. Điều phối nhân sự cao điểm chiều</strong>
+                    <p>Khung 17:00 – 19:30 có 4 ca Hifu & Laser. Hãy nhắc KTV Thu Trang và Bác sĩ Yến sẵn sàng thiết bị phòng Laser trước 16:15.</p>
+                </div>
+
+                <div class="ai-insight-box">
+                    <strong style="color: #d88a2c;">2. Cảnh báo kho mỹ phẩm sắp hết</strong>
+                    <p>Sản phẩm Serum B5 HA Intensifier còn 6 chai trong kho. Hãy tạo phiếu nhập kho trước 17:00 để kịp nhận hàng vào sáng mai.</p>
+                </div>
+
+                <div class="ai-insight-box" style="margin-bottom: 0;">
+                    <strong style="color: #278c57;">3. Chăm sóc khách VIP sinh nhật</strong>
+                    <p>Hôm nay là sinh nhật khách hàng VIP Nguyễn Thị Minh Anh. Hệ thống đã chuẩn bị mã ưu đãi 10% trên hóa đơn tiếp theo.</p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- MODAL AI BÁO CÁO ĐIỀU HÀNH -->
+<div class="customer-modal-backdrop" id="aiSummaryModal">
+    <div class="customer-modal" style="max-width: 620px;">
+        <div class="customer-modal-header" style="background: linear-gradient(135deg, #fdf8fb 0%, #faedf4 100%);">
+            <div>
+                <span class="spa-ai-tag">✨ TRỢ LÝ ĐIỀU HÀNH LUNA AI</span>
+                <h2 style="color: #985c7e; margin-top: 4px;">Báo cáo tổng kết vận hành thời gian thực</h2>
+                <p>Tổng hợp chỉ số tài chính, tải công suất và đề xuất tối ưu hóa hoạt động Spa.</p>
+            </div>
+            <button type="button" class="customer-modal-close" id="closeAiSummaryModal">×</button>
+        </div>
+
+        <div style="padding: 22px 25px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px;">
+                <div style="background: #fdfafc; padding: 14px; border-radius: 10px; border: 1px solid #eee7ed;">
+                    <span style="font-size: 11px; color: #8c8296;">Doanh thu ước tính hôm nay</span>
+                    <strong style="display: block; font-size: 20px; color: #985c7e; margin-top: 3px;">12.450.000 đ</strong>
+                    <small style="color: #278c57; font-size: 11px;">Đạt 105% chỉ tiêu ngày</small>
+                </div>
+                <div style="background: #fdfafc; padding: 14px; border-radius: 10px; border: 1px solid #eee7ed;">
+                    <span style="font-size: 11px; color: #8c8296;">Độ hài lòng khách hàng</span>
+                    <strong style="display: block; font-size: 20px; color: #d88a2c; margin-top: 3px;">4.95 / 5.0 ★</strong>
+                    <small style="color: #985c7e; font-size: 11px;">100% đánh giá tích cực</small>
+                </div>
+            </div>
+
+            <div style="background: #fdf8fb; border-left: 4px solid #a76d8e; padding: 14px 16px; border-radius: 0 10px 10px 0; margin-bottom: 14px;">
+                <strong style="display: block; font-size: 13px; color: #3d3052; margin-bottom: 4px;">
+                    ✦ Nhận định xu hướng làm đẹp tuần này:
+                </strong>
+                <p style="margin: 0; font-size: 12px; color: #625773; line-height: 1.5;">
+                    Khách hàng đang có xu hướng chuyển dịch mạnh từ dịch vụ chăm sóc da mặt truyền thống sang các phác đồ công nghệ cao (Laser Pico + Hifu). Doanh thu trung bình trên mỗi lượt khách đã tăng từ 450.000 đ lên 1.850.000 đ.
+                </p>
+            </div>
+
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 12px 14px; font-size: 12px; color: #166534;">
+                ✓ <strong>Hệ thống AI tự động:</strong> Đã gửi nhắc lịch thành công cho 100% khách hẹn và tự động cập nhật lịch công tác cho 7 kỹ thuật viên.
+            </div>
+        </div>
+
+        <div class="customer-modal-footer">
+            <button type="button" class="customer-secondary-btn" id="closeAiSummaryBtn">Đóng</button>
+            <button type="button" class="customer-primary-btn" id="exportAiReportBtn">
+                📥 Tải báo cáo PDF
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const aiModal = document.getElementById("aiSummaryModal");
+    function openModal() { aiModal.classList.add("show"); }
+    function closeModal() { aiModal.classList.remove("show"); }
+
+    document.getElementById("openAiSummaryModal")?.addEventListener("click", openModal);
+    document.getElementById("aiExecutiveBannerBtn")?.addEventListener("click", openModal);
+    document.getElementById("closeAiSummaryModal")?.addEventListener("click", closeModal);
+    document.getElementById("closeAiSummaryBtn")?.addEventListener("click", closeModal);
+    document.getElementById("exportAiReportBtn")?.addEventListener("click", function() {
+        alert("Đã xuất báo cáo điều hành tổng quan LUNA SPA sang định dạng PDF!");
+        closeModal();
+    });
+
+    aiModal?.addEventListener("click", function(e) {
+        if (e.target === aiModal) closeModal();
+    });
+
+    // Duyệt nhanh lịch hẹn trên Dashboard trang chủ
+    document.querySelectorAll(".home-quick-approve").forEach(btn => {
+        btn.addEventListener("click", async function () {
+            const id = this.getAttribute("data-id");
+            const parentCol = this.closest("td");
+            const statusSpan = parentCol.querySelector(".customer-status");
+
+            if (statusSpan) {
+                statusSpan.className = "customer-status status-active";
+                statusSpan.innerHTML = "<i></i>Đã xác nhận";
+            }
+            this.remove();
+
+            try {
+                await fetch(`/Appointments/UpdateStatus?id=${id}&status=${encodeURIComponent("Đã xác nhận")}`, {
+                    method: "POST"
+                });
+            } catch (err) {
+                console.error("Lỗi duyệt lịch hẹn:", err);
+            }
+
+            if (window.showLunaToast) {
+                window.showLunaToast("✓ Quản trị viên đã duyệt lịch hẹn thành công!", "success");
+            }
+        });
+    });
+</script>
+}

@@ -1,0 +1,672 @@
+@model IEnumerable<GiaoDienSpa.Models.InventoryItem>
+
+@{
+    ViewData["Title"] = "Kho mỹ phẩm";
+}
+
+<div class="customer-page inventory-page">
+
+    <!-- TIÊU ĐỀ TRANG -->
+    <div class="customer-page-header">
+        <div>
+            <div class="customer-breadcrumb">LUNA SPA / Quản trị kho</div>
+            <h1>Kho mỹ phẩm & Dược liệu Spa</h1>
+            <p>Kiểm soát tồn kho thực tế, hạn dùng dược mỹ phẩm và dự báo luân chuyển hàng hóa bằng AI.</p>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="spa-ai-btn" id="openAiRestockModal" type="button">
+                <span>✨</span> AI Kế hoạch nhập hàng
+            </button>
+            <button class="customer-primary-btn" id="openProductModal" type="button">
+                <span>＋</span> Nhập sản phẩm mới
+            </button>
+        </div>
+    </div>
+
+    <!-- THỐNG KÊ KHO HÀNG -->
+    <div class="customer-stats">
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-purple">▤</div>
+            <div>
+                <span class="customer-stat-label">Tổng mặt hàng</span>
+                <strong id="totalProducts">@ViewBag.TotalItems</strong>
+                <small>Dược mỹ phẩm & vật tư</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-orange">⚠</div>
+            <div>
+                <span class="customer-stat-label">Sắp hết hàng (&le; min)</span>
+                <strong id="lowStockProducts" style="color: #d88a2c;">@ViewBag.LowStockItems</strong>
+                <small>Cần bổ sung định mức</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-blue">⌧</div>
+            <div>
+                <span class="customer-stat-label">Hết hàng trong kho</span>
+                <strong id="outOfStockProducts" style="color: #d85f6b;">@ViewBag.OutOfStockItems</strong>
+                <small>Sản phẩm tồn bằng 0</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-green">₫</div>
+            <div>
+                <span class="customer-stat-label">Trị giá tồn kho</span>
+                <strong id="totalInventoryValue" style="color: #278c57;">@(((decimal)(ViewBag.TotalInventoryValue ?? 0)).ToString("N0")) đ</strong>
+                <small>Tính theo giá vốn</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI SMART BANNER -->
+    <div class="spa-ai-banner">
+        <div class="spa-ai-banner-left">
+            <div class="spa-ai-icon-pulse">✦</div>
+            <div class="spa-ai-content">
+                <span class="spa-ai-tag">✨ DỰ BÁO NHU CẦU NGUYÊN VẬT LIỆU AI</span>
+                <p class="spa-ai-text">
+                    Tốc độ tiêu thụ <strong>Serum Cấp Ẩm B5 HA</strong> và <strong>Mặt Nạ Vàng 24K</strong> tăng 38% do các phác đồ làm đẹp mùa khô hanh. Dự báo sẽ thiếu hụt trong 4 ngày tới nếu không đặt thêm từ nhà phân phối.
+                </p>
+            </div>
+        </div>
+        <button class="spa-ai-btn" id="aiRestockBannerBtn" type="button">Tạo đề xuất nhập kho</button>
+    </div>
+
+    <!-- DANH SÁCH SẢN PHẨM -->
+    <div class="customer-content-card">
+        <div class="customer-content-heading">
+            <div>
+                <h2>Danh mục sản phẩm & Vật tư tiêu hao</h2>
+                <p>Theo dõi hạn dùng, định mức an toàn và quản lý giá bán dịch vụ.</p>
+            </div>
+            <span class="customer-total-badge" id="productCountBadge">@Model.Count() sản phẩm</span>
+        </div>
+
+        <div class="customer-toolbar">
+            <div class="customer-search-box">
+                <span>⌕</span>
+                <input type="text" id="inventorySearch"
+                       placeholder="Tìm theo tên sản phẩm, mã SKU, thương hiệu, nhà cung cấp..." />
+            </div>
+
+            <select id="inventoryCategoryFilter" class="customer-filter">
+                <option value="">Tất cả danh mục</option>
+                <option value="Serum đặc trị">Serum đặc trị</option>
+                <option value="Chăm sóc da">Chăm sóc da</option>
+                <option value="Mặt nạ sinh học">Mặt nạ sinh học</option>
+                <option value="Tinh dầu thảo mộc">Tinh dầu thảo mộc</option>
+                <option value="Kem dưỡng">Kem dưỡng</option>
+            </select>
+
+            <select id="inventoryStatusFilter" class="customer-filter">
+                <option value="">Tất cả trạng thái</option>
+                <option value="Còn hàng">Còn hàng</option>
+                <option value="Sắp hết hàng">Sắp hết hàng</option>
+                <option value="Hết hàng">Hết hàng</option>
+                <option value="Cận date">Cận date (&le; 30 ngày)</option>
+            </select>
+
+            <button class="customer-secondary-btn" id="resetInventoryFilter" type="button">
+                ↺ Làm mới
+            </button>
+        </div>
+
+        <div class="customer-table-wrap">
+            <table class="customer-table">
+                <thead>
+                    <tr>
+                        <th>SẢN PHẨM & SKU</th>
+                        <th>DANH MỤC</th>
+                        <th>TỒN KHO & ĐỊNH MỨC</th>
+                        <th>ĐƠN VỊ & ĐƠN GIÁ</th>
+                        <th>HẠN SỬ DỤNG</th>
+                        <th>NHÀ CUNG CẤP</th>
+                        <th>TRẠNG THÁI</th>
+                        <th class="customer-action-heading">THAO TÁC</th>
+                    </tr>
+                </thead>
+                <tbody id="inventoryTableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="customer-table-footer">
+            <span id="inventoryPageInfo">Hiển thị @Model.Count() sản phẩm</span>
+            <div class="customer-pagination">
+                <button type="button" disabled>‹</button>
+                <button type="button" class="current-page">1</button>
+                <button type="button" disabled>›</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL THÊM / SỬA SẢN PHẨM -->
+<div class="customer-modal-backdrop" id="productModal">
+    <div class="customer-modal">
+        <div class="customer-modal-header">
+            <div>
+                <h2 id="productModalTitle">Nhập sản phẩm mới</h2>
+                <p>Khai báo thông tin mỹ phẩm, đơn giá và định mức tồn an toàn.</p>
+            </div>
+            <button type="button" class="customer-modal-close" id="closeProductModal">×</button>
+        </div>
+
+        <form id="productForm">
+            <input type="hidden" id="productEditId" />
+
+            <div class="customer-form-grid">
+                <div class="customer-form-group">
+                    <label for="pName">Tên sản phẩm mỹ phẩm <span>*</span></label>
+                    <input id="pName" type="text" placeholder="Ví dụ: Serum HA Cấp Ẩm Sâu..." required />
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="pBrand">Thương hiệu / Hãng <span>*</span></label>
+                    <input id="pBrand" type="text" placeholder="Ví dụ: SkinCeuticals, Luna Botanic..." required />
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="pCategory">Danh mục sản phẩm <span>*</span></label>
+                    <select id="pCategory" required>
+                        <option value="Serum đặc trị">Serum đặc trị</option>
+                        <option value="Chăm sóc da">Chăm sóc da</option>
+                        <option value="Mặt nạ sinh học">Mặt nạ sinh học</option>
+                        <option value="Tinh dầu thảo mộc">Tinh dầu thảo mộc</option>
+                        <option value="Kem dưỡng">Kem dưỡng</option>
+                    </select>
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="pSku">Mã SKU</label>
+                    <input id="pSku" type="text" placeholder="Để trống để hệ thống tự tạo" />
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="pQuantity">Số lượng tồn kho <span>*</span></label>
+                    <input id="pQuantity" type="number" min="0" value="10" required />
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="pMinQuantity">Định mức tồn tối thiểu <span>*</span></label>
+                    <input id="pMinQuantity" type="number" min="1" value="8" required />
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="pUnit">Đơn vị tính</label>
+                    <select id="pUnit">
+                        <option value="Chai">Chai</option>
+                        <option value="Lọ">Lọ</option>
+                        <option value="Hộp">Hộp</option>
+                        <option value="Tuýp">Tuýp</option>
+                        <option value="Xô">Xô</option>
+                        <option value="Gói">Gói</option>
+                    </select>
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="pCostPrice">Giá vốn nhập vào (VNĐ)</label>
+                    <input id="pCostPrice" type="number" min="0" step="1000" value="500000" />
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="pUnitPrice">Giá bán lẻ / tính liệu trình (VNĐ) <span>*</span></label>
+                    <input id="pUnitPrice" type="number" min="0" step="1000" value="750000" required />
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="pExpiryDate">Hạn sử dụng</label>
+                    <input id="pExpiryDate" type="date" required />
+                </div>
+
+                <div class="customer-form-group customer-form-full">
+                    <label for="pSupplier">Nhà cung cấp / Phân phối chính hãng</label>
+                    <input id="pSupplier" type="text" placeholder="Ví dụ: Công ty Dược Phẩm Á Châu, L'Oréal VN..." />
+                </div>
+            </div>
+
+            <div class="customer-modal-footer">
+                <button type="button" class="customer-secondary-btn" id="cancelProductModal">Hủy</button>
+                <button type="submit" class="customer-primary-btn" id="saveProductBtn">Lưu sản phẩm</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL NHẬP HÀNG NHANH (QUICK RESTOCK) -->
+<div class="customer-modal-backdrop" id="quickRestockModal">
+    <div class="customer-modal" style="max-width: 480px;">
+        <div class="customer-modal-header">
+            <div>
+                <h2>Nhập thêm hàng vào kho</h2>
+                <p id="restockProductLabel">Cập nhật số lượng nhập mới.</p>
+            </div>
+            <button type="button" class="customer-modal-close" id="closeQuickRestockModal">×</button>
+        </div>
+
+        <form id="quickRestockForm">
+            <input type="hidden" id="restockProductId" />
+            <div style="padding: 22px 25px;">
+                <div class="customer-form-group">
+                    <label for="restockAddQty">Số lượng nhập thêm <span>*</span></label>
+                    <input id="restockAddQty" type="number" min="1" value="10" required />
+                </div>
+                <div style="margin-top: 14px; font-size: 12px; color: #776e82;">
+                    Hệ thống sẽ cộng dồn số lượng và cập nhật trạng thái an toàn tự động.
+                </div>
+            </div>
+            <div class="customer-modal-footer">
+                <button type="button" class="customer-secondary-btn" id="cancelQuickRestockBtn">Hủy</button>
+                <button type="submit" class="customer-primary-btn">Xác nhận nhập kho</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL AI KẾ HOẠCH NHẬP HÀNG -->
+<div class="customer-modal-backdrop" id="aiRestockModal">
+    <div class="customer-modal" style="max-width: 650px;">
+        <div class="customer-modal-header" style="background: linear-gradient(135deg, #fdf8fb 0%, #faedf4 100%);">
+            <div>
+                <span class="spa-ai-tag">✨ TRỢ LÝ QUẢN TRỊ KHO DƯỢC LUNA AI</span>
+                <h2 style="color: #985c7e; margin-top: 4px;">Đề xuất đơn đặt hàng định mức thông minh</h2>
+                <p>AI dự toán dựa trên tốc độ tiêu hao của các liệu trình đang được đặt lịch nhiều nhất.</p>
+            </div>
+            <button type="button" class="customer-modal-close" id="closeAiRestockModal">×</button>
+        </div>
+
+        <div style="padding: 22px 25px;">
+            <div style="background: #fff8eb; border: 1px solid #f2dfbd; border-radius: 10px; padding: 13px 16px; margin-bottom: 18px; font-size: 13px; color: #7d5b1d;">
+                <strong>Gợi ý đàm phán chi phí:</strong> Gom đơn nhà cung cấp <em>SkinCeuticals</em> và <em>Dược Mỹ Phẩm Châu Âu</em> để đạt đơn hàng trên 20.000.000 đ nhằm nhận chiết khấu thêm 5%.
+            </div>
+
+            <div style="font-size: 13px; font-weight: 700; color: #302744; margin-bottom: 10px;">
+                Danh sách đề xuất nhập khẩn cấp:
+            </div>
+
+            <div id="aiRestockList" style="max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                <!-- Render bằng Javascript -->
+            </div>
+
+            <div style="margin-top: 18px; padding-top: 14px; border-top: 1px dashed #e8ddee; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 13px; color: #625871;">Tổng ngân sách dự toán:</span>
+                <strong style="font-size: 18px; color: #985c7e;" id="aiTotalBudget">0 đ</strong>
+            </div>
+        </div>
+
+        <div class="customer-modal-footer">
+            <button type="button" class="customer-secondary-btn" id="closeAiRestockBtn">Đóng</button>
+            <button type="button" class="customer-primary-btn" id="exportAiRestockBtn">
+                📥 Xuất phiếu đề xuất đặt hàng
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let inventory = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }));
+
+    const tableBody = document.getElementById("inventoryTableBody");
+    const modal = document.getElementById("productModal");
+    const form = document.getElementById("productForm");
+    const restockModal = document.getElementById("quickRestockModal");
+    const restockForm = document.getElementById("quickRestockForm");
+    const aiModal = document.getElementById("aiRestockModal");
+
+    // Đặt mặc định ngày hết hạn = 1 năm tới
+    const nextYear = new Date();
+    nextYear.setFullYear(nextYear.getFullYear() + 1);
+    document.getElementById("pExpiryDate").value = nextYear.toISOString().split("T")[0];
+
+    function escapeHtml(value) {
+        return String(value ?? "").replace(/[&<>"']/g, function (c) {
+            return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[c];
+        });
+    }
+
+    function formatCurrency(num) {
+        return Number(num || 0).toLocaleString("vi-VN") + " đ";
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return "—";
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+    }
+
+    function isExpiringSoon(dateStr) {
+        if (!dateStr) return false;
+        const d = new Date(dateStr);
+        const now = new Date();
+        const diffDays = (d - now) / (1000 * 60 * 60 * 24);
+        return diffDays <= 30;
+    }
+
+    function renderInventory() {
+        const keyword = document.getElementById("inventorySearch").value.trim().toLowerCase();
+        const category = document.getElementById("inventoryCategoryFilter").value;
+        const status = document.getElementById("inventoryStatusFilter").value;
+
+        const filtered = inventory.filter(p => {
+            const matchKeyword =
+                p.productName.toLowerCase().includes(keyword) ||
+                (p.sku && p.sku.toLowerCase().includes(keyword)) ||
+                (p.brand && p.brand.toLowerCase().includes(keyword)) ||
+                (p.supplier && p.supplier.toLowerCase().includes(keyword));
+
+            const matchCategory = !category || p.category === category;
+            const matchStatus = !status || p.status === status;
+
+            return matchKeyword && matchCategory && matchStatus;
+        });
+
+        tableBody.innerHTML = "";
+
+        if (filtered.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="customer-empty">
+                        Không tìm thấy sản phẩm mỹ phẩm phù hợp.
+                    </td>
+                </tr>`;
+        } else {
+            filtered.forEach(p => {
+                const expiring = isExpiringSoon(p.expiryDate);
+                const percent = Math.min(100, Math.round((p.quantity / (p.minQuantity * 2 || 1)) * 100));
+                let fillClass = "fill-safe";
+                if (p.quantity === 0) fillClass = "fill-danger";
+                else if (p.quantity <= p.minQuantity) fillClass = "fill-warning";
+
+                let statusBadge = "status-active";
+                let statusText = p.status;
+                if (p.status === "Hết hàng") statusBadge = "status-danger";
+                else if (p.status === "Sắp hết hàng") statusBadge = "status-warning";
+                else if (p.status === "Cận date" || expiring) {
+                    statusBadge = "status-expiring";
+                    statusText = "Cận date";
+                }
+
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>
+                        <div class="inventory-product-cell">
+                            <div class="inventory-product-icon">🧴</div>
+                            <div>
+                                <strong style="color:#352c42; font-size:13px;">${escapeHtml(p.productName)}</strong>
+                                <div style="margin-top:3px; display:flex; align-items:center; gap:6px;">
+                                    <span class="inventory-brand-tag">${escapeHtml(p.brand || 'LUNA BOTANIC')}</span>
+                                    <span class="inventory-sku-code">${escapeHtml(p.sku || '')}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="employee-specialty-badge">${escapeHtml(p.category)}</span>
+                    </td>
+                    <td>
+                        <div class="stock-meter-wrap">
+                            <div class="stock-meter-header">
+                                <strong style="color:${p.quantity === 0 ? '#d85f6b' : (p.quantity <= p.minQuantity ? '#d88a2c' : '#302744')}">
+                                    ${p.quantity} ${escapeHtml(p.unit)}
+                                </strong>
+                                <small style="color:#92879e;">Min: ${p.minQuantity}</small>
+                            </div>
+                            <div class="stock-meter-bar">
+                                <div class="stock-meter-fill ${fillClass}" style="width: ${percent}%;"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-weight:700; color:#985c7e; font-size:13px;">${formatCurrency(p.unitPrice)}</div>
+                        <small style="color:#92879e; font-size:11px;">Vốn: ${formatCurrency(p.costPrice)}</small>
+                    </td>
+                    <td>
+                        <span style="font-size:12px; ${expiring ? 'color:#c93b54; font-weight:700;' : 'color:#51475f;'}">
+                            ${formatDate(p.expiryDate)} ${expiring ? '⚠️' : ''}
+                        </span>
+                    </td>
+                    <td>
+                        <span style="color:#635773; font-size:12px;">${escapeHtml(p.supplier || 'Chính hãng')}</span>
+                    </td>
+                    <td>
+                        <span class="status-badge ${statusBadge}">
+                            ${escapeHtml(statusText)}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="customer-row-actions">
+                            <button type="button" title="Nhập thêm hàng nhanh" data-action="restock" data-id="${p.productId}" style="color:#278c57;">＋</button>
+                            <button type="button" title="Xem phân tích & AI" data-action="view" data-id="${p.productId}">◉</button>
+                            <button type="button" title="Sửa thông tin" data-action="edit" data-id="${p.productId}">✎</button>
+                            <button type="button" title="Xóa" data-action="delete" data-id="${p.productId}">⌫</button>
+                        </div>
+                    </td>`;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Cập nhật thống kê
+        const low = inventory.filter(x => x.quantity <= x.minQuantity && x.quantity > 0).length;
+        const out = inventory.filter(x => x.quantity === 0).length;
+        const totalVal = inventory.reduce((sum, x) => sum + (x.quantity * x.costPrice), 0);
+
+        document.getElementById("totalProducts").textContent = inventory.length;
+        document.getElementById("lowStockProducts").textContent = low;
+        document.getElementById("outOfStockProducts").textContent = out;
+        document.getElementById("totalInventoryValue").textContent = formatCurrency(totalVal);
+
+        document.getElementById("productCountBadge").textContent = `${filtered.length} sản phẩm`;
+        document.getElementById("inventoryPageInfo").textContent = `Đang hiển thị ${filtered.length} trong tổng số ${inventory.length} mặt hàng`;
+    }
+
+    function openModal(prod = null) {
+        form.reset();
+        document.getElementById("productEditId").value = "";
+        document.getElementById("productModalTitle").textContent = prod ? "Chỉnh sửa mỹ phẩm" : "Nhập sản phẩm mới";
+
+        if (prod) {
+            document.getElementById("productEditId").value = prod.productId;
+            document.getElementById("pName").value = prod.productName;
+            document.getElementById("pBrand").value = prod.brand || "";
+            document.getElementById("pCategory").value = prod.category;
+            document.getElementById("pSku").value = prod.sku || "";
+            document.getElementById("pQuantity").value = prod.quantity;
+            document.getElementById("pMinQuantity").value = prod.minQuantity;
+            document.getElementById("pUnit").value = prod.unit;
+            document.getElementById("pCostPrice").value = prod.costPrice;
+            document.getElementById("pUnitPrice").value = prod.unitPrice;
+            if (prod.expiryDate) {
+                document.getElementById("pExpiryDate").value = prod.expiryDate.split("T")[0];
+            }
+            document.getElementById("pSupplier").value = prod.supplier || "";
+        }
+
+        modal.classList.add("show");
+    }
+
+    function closeModal() {
+        modal.classList.remove("show");
+    }
+
+    document.getElementById("openProductModal").addEventListener("click", () => openModal());
+    document.getElementById("closeProductModal").addEventListener("click", closeModal);
+    document.getElementById("cancelProductModal").addEventListener("click", closeModal);
+    modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+
+    // Quick Restock
+    function openQuickRestock(prod) {
+        document.getElementById("restockProductId").value = prod.productId;
+        document.getElementById("restockProductLabel").textContent = `Nhập thêm cho: ${prod.productName} (Hiện có: ${prod.quantity} ${prod.unit})`;
+        document.getElementById("restockAddQty").value = 10;
+        restockModal.classList.add("show");
+    }
+
+    document.getElementById("closeQuickRestockModal").addEventListener("click", () => restockModal.classList.remove("show"));
+    document.getElementById("cancelQuickRestockBtn").addEventListener("click", () => restockModal.classList.remove("show"));
+    restockModal.addEventListener("click", e => { if (e.target === restockModal) restockModal.classList.remove("show"); });
+
+    restockForm.addEventListener("submit", function(e) {
+        e.preventDefault();
+        const id = Number(document.getElementById("restockProductId").value);
+        const addQty = Number(document.getElementById("restockAddQty").value) || 0;
+        const prod = inventory.find(x => x.productId === id);
+        if (prod) {
+            prod.quantity += addQty;
+            if (prod.quantity > prod.minQuantity) prod.status = "Còn hàng";
+            prod.aiPrediction = `AI Cập nhật: Đã bổ sung ${addQty} ${prod.unit}. Số lượng an toàn đáp ứng tốt các ca liệu trình sắp tới.`;
+            restockModal.classList.remove("show");
+            renderInventory();
+            alert(`Đã nhập thêm thành công ${addQty} ${prod.unit} cho ${prod.productName}!`);
+        }
+    });
+
+    // AI Restock Plan Modal
+    function openAiRestockModal() {
+        const urgentItems = inventory.filter(x => x.quantity <= x.minQuantity || isExpiringSoon(x.expiryDate));
+        const listContainer = document.getElementById("aiRestockList");
+        listContainer.innerHTML = "";
+
+        let totalEst = 0;
+        urgentItems.forEach(item => {
+            const suggestQty = Math.max(item.minQuantity * 2 - item.quantity, 10);
+            const cost = suggestQty * item.costPrice;
+            totalEst += cost;
+
+            const div = document.createElement("div");
+            div.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#fdfafc; padding:10px 14px; border-radius:8px; border:1px solid #eee7ed;";
+            div.innerHTML = `
+                <div>
+                    <strong style="color:#342845; font-size:12px;">${escapeHtml(item.productName)}</strong>
+                    <div style="font-size:11px; color:#837691; margin-top:2px;">
+                        Tồn: <span style="color:#c93b54; font-weight:700;">${item.quantity} ${escapeHtml(item.unit)}</span> • Định mức: ${item.minQuantity}
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <span style="display:inline-block; background:#e8f7ef; color:#278c57; font-weight:700; font-size:11px; padding:3px 8px; border-radius:6px;">
+                        Đặt thêm: +${suggestQty} ${escapeHtml(item.unit)}
+                    </span>
+                    <small style="display:block; margin-top:3px; color:#985c7e; font-weight:650;">~ ${formatCurrency(cost)}</small>
+                </div>`;
+            listContainer.appendChild(div);
+        });
+
+        document.getElementById("aiTotalBudget").textContent = formatCurrency(totalEst);
+        aiModal.classList.add("show");
+    }
+
+    document.getElementById("openAiRestockModal").addEventListener("click", openAiRestockModal);
+    document.getElementById("aiRestockBannerBtn").addEventListener("click", openAiRestockModal);
+    document.getElementById("closeAiRestockModal").addEventListener("click", () => aiModal.classList.remove("show"));
+    document.getElementById("closeAiRestockBtn").addEventListener("click", () => aiModal.classList.remove("show"));
+    document.getElementById("exportAiRestockBtn").addEventListener("click", function() {
+        alert("Đã tạo và tải xuống Phiếu đề xuất nhập hàng (AI Purchase Order) gửi phòng Kế toán & Quản trị!");
+        aiModal.classList.remove("show");
+    });
+    aiModal.addEventListener("click", e => { if (e.target === aiModal) aiModal.classList.remove("show"); });
+
+    // Filter
+    document.getElementById("inventorySearch").addEventListener("input", renderInventory);
+    document.getElementById("inventoryCategoryFilter").addEventListener("change", renderInventory);
+    document.getElementById("inventoryStatusFilter").addEventListener("change", renderInventory);
+    document.getElementById("resetInventoryFilter").addEventListener("click", function() {
+        document.getElementById("inventorySearch").value = "";
+        document.getElementById("inventoryCategoryFilter").value = "";
+        document.getElementById("inventoryStatusFilter").value = "";
+        renderInventory();
+    });
+
+    // Submit form thêm / sửa
+    form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const editId = document.getElementById("productEditId").value;
+        const qty = Number(document.getElementById("pQuantity").value) || 0;
+        const minQty = Number(document.getElementById("pMinQuantity").value) || 5;
+        const expDate = document.getElementById("pExpiryDate").value;
+
+        let status = "Còn hàng";
+        if (qty === 0) status = "Hết hàng";
+        else if (isExpiringSoon(expDate)) status = "Cận date";
+        else if (qty <= minQty) status = "Sắp hết hàng";
+
+        const prodData = {
+            productId: editId ? Number(editId) : 0,
+            productName: document.getElementById("pName").value.trim(),
+            brand: document.getElementById("pBrand").value.trim(),
+            category: document.getElementById("pCategory").value,
+            sku: document.getElementById("pSku").value.trim(),
+            quantity: qty,
+            minQuantity: minQty,
+            unit: document.getElementById("pUnit").value,
+            costPrice: Number(document.getElementById("pCostPrice").value) || 0,
+            unitPrice: Number(document.getElementById("pUnitPrice").value) || 0,
+            expiryDate: expDate,
+            supplier: document.getElementById("pSupplier").value.trim(),
+            status: status
+        };
+
+        if (editId) {
+            const index = inventory.findIndex(x => x.productId === Number(editId));
+            if (index !== -1) {
+                prodData.sku = prodData.sku || inventory[index].sku;
+                prodData.aiPrediction = inventory[index].aiPrediction;
+                inventory[index] = prodData;
+            }
+        } else {
+            const newId = inventory.length ? Math.max(...inventory.map(x => x.productId)) + 1 : 1;
+            prodData.productId = newId;
+            prodData.sku = prodData.sku || ("SKU-" + String(newId).padStart(4, "0"));
+            prodData.aiPrediction = "Sản phẩm mới thêm vào kho. AI đang theo dõi chu kỳ sử dụng.";
+            inventory.unshift(prodData);
+        }
+
+        closeModal();
+        renderInventory();
+    });
+
+    // Table click
+    tableBody.addEventListener("click", function (e) {
+        const btn = e.target.closest("button[data-action]");
+        if (!btn) return;
+
+        const id = Number(btn.dataset.id);
+        const prod = inventory.find(x => x.productId === id);
+        if (!prod) return;
+
+        const action = btn.dataset.action;
+
+        if (action === "restock") {
+            openQuickRestock(prod);
+        } else if (action === "edit") {
+            openModal(prod);
+        } else if (action === "view") {
+            alert(
+                `THÔNG TIN CHI TIẾT MỸ PHẨM & DỰ BÁO AI - LUNA SPA\n\n` +
+                `Sản phẩm: ${prod.productName}\n` +
+                `Mã SKU: ${prod.sku}\n` +
+                `Thương hiệu: ${prod.brand || 'Luna Botanic'}\n` +
+                `Danh mục: ${prod.category}\n` +
+                `Tồn kho: ${prod.quantity} ${prod.unit} (Định mức tối thiểu: ${prod.minQuantity})\n` +
+                `Đơn giá: ${formatCurrency(prod.unitPrice)} | Giá vốn: ${formatCurrency(prod.costPrice)}\n` +
+                `Hạn dùng: ${formatDate(prod.expiryDate)}\n` +
+                `Nhà cung cấp: ${prod.supplier || 'Chính hãng'}\n` +
+                `Trạng thái: ${prod.status}\n\n` +
+                `✨ Dự báo AI: ${prod.aiPrediction || 'Đang theo dõi chu kỳ tiêu hao định kỳ.'}`
+            );
+        } else if (action === "delete") {
+            if (confirm(`Bạn có chắc muốn xóa sản phẩm "${prod.productName}" khỏi danh mục kho?`)) {
+                inventory = inventory.filter(x => x.productId !== id);
+                renderInventory();
+            }
+        }
+    });
+
+    renderInventory();
+</script>
+}

@@ -1,0 +1,699 @@
+@model GiaoDienSpa.Models.AiConsultationSession
+@{
+    ViewData["Title"] = "Tư vấn AI & Chẩn đoán Da liễu";
+}
+
+<div class="customer-page">
+
+    <!-- TIÊU ĐỀ TRANG & NÚT THAO TÁC -->
+    <div class="customer-page-header">
+        <div>
+            <h1>Tư vấn AI & Chẩn đoán Da liễu</h1>
+            <p>Hệ thống AI phân tích biểu bì, lập phác đồ cá nhân hóa và trợ lý tư vấn trực tuyến 24/7.</p>
+        </div>
+        <div class="customer-header-actions">
+            <button class="customer-secondary-btn" id="btnPrintConsultation" type="button">
+                🖨 In phiếu tư vấn
+            </button>
+            <button class="customer-primary-btn" id="btnResetDiagnosis" type="button">
+                <span>✦</span> Chẩn đoán khách mới
+            </button>
+        </div>
+    </div>
+
+    <!-- BANNER TRỢ LÝ AI CHUYÊN SÂU -->
+    <div class="spa-ai-banner">
+        <div class="spa-ai-banner-left">
+            <div class="spa-ai-icon-pulse">✨</div>
+            <div>
+                <span class="spa-ai-tag">LUNA AI DERMA-INTELLIGENCE 2026</span>
+                <h3>Trợ lý Phân tích Da liễu Đa chiều & Lập phác đồ Tự động</h3>
+                <p>Mô hình AI đối soát tình trạng màng đáy thượng bì, bã nhờn và đề xuất liệu trình chuẩn y khoa.</p>
+            </div>
+        </div>
+        <div class="spa-ai-banner-right">
+            <span style="font-size: 12px; color: #79576e; font-weight: 600;">
+                ✓ Đã hiệu chỉnh theo 1.200 ca lâm sàng
+            </span>
+        </div>
+    </div>
+
+    <!-- 4 THẺ CHỈ SỐ KPI TƯ VẤN AI -->
+    <div class="customer-stats">
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-purple">✦</div>
+            <div>
+                <span class="customer-stat-label">Tổng lượt tư vấn</span>
+                <strong style="color: #985c7e;">@ViewBag.TotalConsultations lượt</strong>
+                <small>Tăng 22% trong tháng</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-green">▣</div>
+            <div>
+                <span class="customer-stat-label">Tỷ lệ chốt liệu trình</span>
+                <strong style="color: #278c57;">@ViewBag.ConversionRate%</strong>
+                <small>Khách đặt hẹn sau tư vấn</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-orange">★</div>
+            <div>
+                <span class="customer-stat-label">Điểm hài lòng tư vấn</span>
+                <strong style="color: #d88a2c;">@ViewBag.SatisfactionRate%</strong>
+                <small>Đánh giá từ khách hàng</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-blue">⏱</div>
+            <div>
+                <span class="customer-stat-label">Thời gian phản hồi AI</span>
+                <strong style="color: #1e598f;">~ 1.2 giây</strong>
+                <small>Phản hồi thời gian thực</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- BỐ CỤC 2 CỘT: STUDIO CHẨN ĐOÁN & CHATBOT TRỰC TUYẾN -->
+    <div class="ai-consult-grid">
+
+        <!-- CỘT 1: STUDIO CHẨN ĐOÁN & LẬP PHÁC ĐỒ DA -->
+        <div style="display: flex; flex-direction: column; gap: 22px;">
+
+            <!-- FORM NHẬP THÔNG TIN KHÁCH HÀNG ĐỂ CHẨN ĐOÁN -->
+            <div class="ai-studio-card">
+                <div class="ai-studio-header">
+                    <div>
+                        <h2>Phiếu thông tin chẩn đoán làn da</h2>
+                        <p>Nhập hồ sơ và biểu hiện da để AI lập phác đồ trị liệu.</p>
+                    </div>
+                    <span class="skin-badge">BƯỚC 1: THU THẬP DỮ LIỆU</span>
+                </div>
+
+                <form id="skinAnalysisForm" class="ai-studio-body">
+                    <div class="customer-form-grid" style="padding: 0; margin-bottom: 16px;">
+                        <div class="customer-form-group">
+                            <label for="diagCustomerName">Tên khách hàng <span>*</span></label>
+                            <input id="diagCustomerName" type="text" value="@Model.CustomerName" placeholder="Ví dụ: Nguyễn Minh Anh" required />
+                        </div>
+
+                        <div class="customer-form-group">
+                            <label for="diagCustomerPhone">Số điện thoại</label>
+                            <input id="diagCustomerPhone" type="tel" value="@Model.CustomerPhone" placeholder="Ví dụ: 0987 654 321" />
+                        </div>
+
+                        <div class="customer-form-group">
+                            <label for="diagAge">Độ tuổi</label>
+                            <input id="diagAge" type="number" min="15" max="80" value="@Model.Age" />
+                        </div>
+
+                        <div class="customer-form-group">
+                            <label for="diagGender">Giới tính</label>
+                            <select id="diagGender">
+                                <option value="Nữ" selected>Nữ</option>
+                                <option value="Nam">Nam</option>
+                                <option value="Khác">Khác</option>
+                            </select>
+                        </div>
+
+                        <div class="customer-form-group">
+                            <label for="diagSkinType">Loại da hiện tại <span>*</span></label>
+                            <select id="diagSkinType" required>
+                                <option value="Da hỗn hợp thiên dầu" selected>Da hỗn hợp thiên dầu</option>
+                                <option value="Da khô mất nước">Da khô mất nước</option>
+                                <option value="Da dầu mụn ẩn">Da dầu mụn ẩn</option>
+                                <option value="Da lão hóa & nám">Da lão hóa & nám</option>
+                                <option value="Da nhạy cảm mỏng đỏ">Da nhạy cảm mỏng đỏ</option>
+                                <option value="Da thường">Da thường</option>
+                            </select>
+                        </div>
+
+                        <div class="customer-form-group">
+                            <label for="diagConcern">Vấn đề da cần cải thiện nhất <span>*</span></label>
+                            <select id="diagConcern" required>
+                                <option value="Lỗ chân lông to & Dầu thừa vùng T-zone" selected>Lỗ chân lông to & Dầu thừa vùng T-zone</option>
+                                <option value="Mụn viêm & Thâm mụn">Mụn viêm & Thâm mụn</option>
+                                <option value="Nám & Tàn nhang đốm nâu">Nám & Tàn nhang đốm nâu</option>
+                                <option value="Lão hóa & Nếp nhăn chùng nhão">Lão hóa & Nếp nhăn chùng nhão</option>
+                                <option value="Da sạm xỉn & Thiếu sức sống">Da sạm xỉn & Thiếu sức sống</option>
+                                <option value="Phục hồi sau laser/lăn kim">Phục hồi sau laser/lăn kim</option>
+                            </select>
+                        </div>
+
+                        <div class="customer-form-group customer-form-full">
+                            <label for="diagLifestyle">Môi trường & Thói quen sinh hoạt</label>
+                            <input id="diagLifestyle" type="text" value="@Model.Lifestyle" placeholder="Ví dụ: Làm việc máy lạnh 8h/ngày, thường xuyên ngủ muộn sau 23:30..." />
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px dashed #eee7ed;">
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #514a54; cursor: pointer;">
+                            <input type="checkbox" id="diagSensitive" style="width: 16px; height: 16px; accent-color: #a76d8e;" />
+                            <span>Da từng có tiền sử kích ứng mỹ phẩm hoặc nhiễm Corticoid</span>
+                        </label>
+
+                        <button type="submit" class="customer-primary-btn" id="btnAnalyzeSkin" style="padding: 10px 20px;">
+                            <span id="analyzeSpinner" style="display:none;">⏳</span>
+                            <span>✨ Bắt đầu phân tích AI</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- KẾT QUẢ CHẨN ĐOÁN & PHÁC ĐỒ ĐỀ XUẤT -->
+            <div class="ai-studio-card" id="diagnosisResultCard">
+                <div class="ai-studio-header">
+                    <div>
+                        <h2>Kết quả chẩn đoán & Phác đồ cá nhân hóa</h2>
+                        <p id="resultCustomerSubtitle">Khách hàng: @Model.CustomerName (@Model.Age tuổi)</p>
+                    </div>
+                    <span class="spa-ai-tag">✦ BÁC SĨ AI ĐỀ XUẤT</span>
+                </div>
+
+                <div class="ai-studio-body">
+                    <!-- Điểm sức khỏe làn da -->
+                    <div class="skin-score-box">
+                        <div class="skin-score-circle">
+                            <span id="dispScore">@Model.SkinHealthScore</span>
+                            <small>/ 100</small>
+                        </div>
+                        <div style="flex: 1;">
+                            <strong style="display: block; font-size: 14px; color: #302b31; margin-bottom: 3px;">
+                                Điểm sức khỏe làn da (Derma Health Index)
+                            </strong>
+                            <p id="dispDiagnosis" style="margin: 0; font-size: 12.5px; color: #625771; line-height: 1.55;">
+                                @Model.AiDiagnosis
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Dịch vụ đề xuất thực hiện tại Spa -->
+                    <div style="margin-bottom: 20px;">
+                        <strong style="display: block; font-size: 13px; color: #302744; margin-bottom: 8px;">
+                            1. Dịch vụ trị liệu đề xuất tại Luna Spa:
+                        </strong>
+                        <div id="dispServicesList" style="display: flex; flex-direction: column; gap: 8px;">
+                            @foreach (var srv in Model.RecommendedServices)
+                            {
+                                <div style="display:flex; justify-content:space-between; align-items:center; background:#fdfafc; border:1px solid #eee7ed; border-radius:10px; padding:10px 14px;">
+                                    <div style="display:flex; align-items:center; gap:8px;">
+                                        <span style="color:#a76d8e; font-weight:700;">✓</span>
+                                        <span style="font-size:13px; font-weight:600; color:#362a43;">@srv</span>
+                                    </div>
+                                    <span class="spa-ai-tag" style="font-size:10px;">ƯU TIÊN SỐ 1</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Đơn Dược mỹ phẩm khuyên dùng kèm tại nhà -->
+                    <div style="margin-bottom: 20px;">
+                        <strong style="display: block; font-size: 13px; color: #302744; margin-bottom: 8px;">
+                            2. Dược mỹ phẩm phục hồi tại nhà (SkinCeuticals / Y khoa):
+                        </strong>
+                        <div id="dispCosmeticsList" style="display: flex; flex-direction: column; gap: 8px;">
+                            @foreach (var cos in Model.RecommendedCosmetics)
+                            {
+                                <div style="display:flex; justify-content:space-between; align-items:center; background:#ffffff; border:1px solid #eee7ed; border-radius:10px; padding:10px 14px;">
+                                    <div style="display:flex; align-items:center; gap:8px;">
+                                        <span style="font-size:14px;">🧴</span>
+                                        <span style="font-size:12.5px; color:#42364f;">@cos</span>
+                                    </div>
+                                    <span style="font-size:11px; color:#278c57; font-weight:700;">Chính hãng</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Quy trình chăm sóc da 7 ngày -->
+                    <div style="margin-bottom: 20px;">
+                        <strong style="display: block; font-size: 13px; color: #302744; margin-bottom: 8px;">
+                            3. Lộ trình chăm sóc gợi ý hàng ngày:
+                        </strong>
+                        <div id="dispRoutineList">
+                            @foreach (var r in Model.CareRoutineSteps)
+                            {
+                                <div class="routine-step-pill">
+                                    <span>✦</span>
+                                    <div>@r</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Dự kiến cải thiện & Bác sĩ chỉ định -->
+                    <div style="background: #fdf8fb; border: 1px solid #ead8e3; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <strong style="color: #985c7e; font-size: 13px;">Dự kiến hiệu quả sau phác đồ:</strong>
+                            <span style="font-size: 12px; font-weight: 700; color: #278c57;" id="dispImprovement">@Model.ExpectedImprovement</span>
+                        </div>
+                        <div style="font-size: 12px; color: #766982;">
+                            Chuyên gia da liễu chỉ định: <strong id="dispDoctor" style="color: #382c47;">@Model.AssignedDoctor</strong>
+                        </div>
+                    </div>
+
+                    <!-- Nút thao tác chuyển đổi -->
+                    <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                        <a asp-controller="Appointments" asp-action="Index" class="customer-primary-btn" style="text-decoration:none;">
+                            📅 Đặt lịch hẹn ngay
+                        </a>
+                        <button type="button" class="customer-secondary-btn" id="btnPreviewPrint">
+                            🖨 Xem phiếu in
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- CỘT 2: TRỢ LÝ TƯ VẤN AI TRỰC TUYẾN (LUNA AI CHATBOT) -->
+        <div>
+            <div class="ai-chat-card">
+                <!-- Chat Header -->
+                <div class="ai-chat-header">
+                    <div class="ai-chat-bot-info">
+                        <div class="ai-chat-avatar">✿</div>
+                        <div>
+                            <strong style="display:block; font-size:14px; color:#302744;">Trợ lý Tư vấn Luna AI</strong>
+                            <span class="ai-online-indicator">Trực tuyến 24/7 • Luna Derma-Bot</span>
+                        </div>
+                    </div>
+                    <button type="button" class="customer-secondary-btn" id="btnClearChat" style="padding: 5px 10px; font-size: 11px;">
+                        ↺ Xóa hội thoại
+                    </button>
+                </div>
+
+                <!-- Chat Body -->
+                <div class="ai-chat-body" id="chatMessagesArea">
+                    <!-- Tin nhắn chào mừng -->
+                    <div class="chat-bubble-wrap ai">
+                        <div class="chat-bubble-ai">
+                            Xin chào! Mình là <strong>Trợ lý AI của Luna Spa</strong> ✿. Mình có thể giải đáp chi tiết về:
+                            <ul style="margin: 6px 0 0; padding-left: 18px; font-size: 12px; line-height: 1.6;">
+                                <li>Phác đồ điều trị nám, mụn, trẻ hóa da chuyên sâu</li>
+                                <li>Bảng giá các gói liệu trình & chính sách ưu đãi thành viên</li>
+                                <li>Hướng dẫn chăm sóc và kiêng khem sau khi làm Spa</li>
+                            </ul>
+                            Bạn có câu hỏi nào cần giải đáp ngay không ạ?
+                        </div>
+                        <span class="chat-time-label">Hôm nay, vừa xong</span>
+                    </div>
+
+                    <div class="chat-bubble-wrap user">
+                        <div class="chat-bubble-user">
+                            Laser Pico Pro điều trị nám có gây đau rát hay bong tróc không bạn?
+                        </div>
+                        <span class="chat-time-label">15:42</span>
+                    </div>
+
+                    <div class="chat-bubble-wrap ai">
+                        <div class="chat-bubble-ai">
+                            Dạ hoàn toàn <strong>không gây đau rát hay bong tróc</strong> chị nhé!
+                            <br /><br />
+                            Công nghệ <strong>Laser Pico Pro</strong> tại Luna Spa sử dụng xung cực ngắn tính bằng pico-giây (phần nghìn tỷ giây), chỉ tác động cơ học vi điểm làm vỡ sắc tố melanin mà không làm tổn thương màng biểu bì ngoài cùng. Sau khi bắn, da chỉ ửng hồng nhẹ trong 15–30 phút và chị có thể sinh hoạt, thoa kem chống nắng bình thường ạ.
+                        </div>
+                        <span class="chat-time-label">15:42</span>
+                    </div>
+                </div>
+
+                <!-- Quick prompt chips -->
+                <div class="ai-chips-container" id="chipsContainer">
+                    <button type="button" class="ai-quick-chip" data-query="Bảng giá các dịch vụ niêm yết tại Spa?">
+                        💰 Bảng giá dịch vụ
+                    </button>
+                    <button type="button" class="ai-quick-chip" data-query="Phác đồ trị mụn y khoa mất bao lâu?">
+                        🌿 Trị mụn y khoa
+                    </button>
+                    <button type="button" class="ai-quick-chip" data-query="Nâng cơ Hifu hiệu quả trong bao lâu?">
+                        ✧ Nâng cơ Hifu
+                    </button>
+                    <button type="button" class="ai-quick-chip" data-query="Cách chăm sóc da sau khi làm Spa?">
+                        🧴 Cách chăm sóc sau làm
+                    </button>
+                    <button type="button" class="ai-quick-chip" data-query="Ưu đãi gói Combo Trẻ Hóa Glow Up 2026?">
+                        🎁 Ưu đãi Combo 2026
+                    </button>
+                </div>
+
+                <!-- Chat Input Wrap -->
+                <form id="aiChatSubmitForm" class="ai-chat-input-wrap">
+                    <div class="ai-chat-input-bar">
+                        <input type="text" id="aiInputText" placeholder="Nhập câu hỏi hoặc tình trạng da của bạn..." autocomplete="off" />
+                    </div>
+                    <button type="submit" class="ai-chat-send-btn" id="btnSendChat" title="Gửi câu hỏi">
+                        ➤
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- MODAL XEM & IN PHIẾU TƯ VẤN Y KHOA -->
+<div class="customer-modal-backdrop" id="printConsultModal">
+    <div class="customer-modal" style="max-width: 650px;">
+        <div class="customer-modal-header" style="background: linear-gradient(135deg, #fdf8fb 0%, #faedf4 100%);">
+            <div>
+                <span class="spa-ai-tag">PHIẾU CHẨN ĐOÁN & PHÁC ĐỒ CHUẨN Y KHOA</span>
+                <h2 style="color: #985c7e; margin-top: 4px;">Phiếu tư vấn làn da Luna Spa</h2>
+                <p>Xem trước trước khi in hoặc xuất tệp PDF cho khách hàng.</p>
+            </div>
+            <button type="button" class="customer-modal-close" id="closePrintModal">×</button>
+        </div>
+
+        <div style="padding: 24px; background: #ffffff;" id="printableSlipArea">
+            <div style="text-align: center; border-bottom: 1px dashed #d5cedc; padding-bottom: 16px; margin-bottom: 16px;">
+                <div style="font-size: 28px; color: #a76d8e; line-height: 1;">✿</div>
+                <h3 style="margin: 4px 0 0; font-size: 20px; color: #985c7e; font-weight: 800; letter-spacing: 2px;">
+                    LUNA SPA & WELLNESS
+                </h3>
+                <p style="margin: 2px 0 0; font-size: 11px; color: #887d92;">
+                    128 Nguyễn Trãi, Quận 1, TP. Hồ Chí Minh • Hotline: 0912 345 678
+                </p>
+                <div style="margin-top: 8px; font-weight: 750; font-size: 15px; color: #302744;">
+                    PHIẾU KẾT QUẢ CHẨN ĐOÁN DA LIỄU AI
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; font-size: 12px; margin-bottom: 16px;">
+                <div><span style="color:#8c8296;">Khách hàng:</span> <strong id="slipName">@Model.CustomerName</strong></div>
+                <div><span style="color:#8c8296;">Số điện thoại:</span> <strong id="slipPhone">@Model.CustomerPhone</strong></div>
+                <div><span style="color:#8c8296;">Độ tuổi / Giới tính:</span> <strong id="slipAgeGender">@Model.Age tuổi (@Model.Gender)</strong></div>
+                <div><span style="color:#8c8296;">Loại da:</span> <strong id="slipSkinType">@Model.SkinType</strong></div>
+                <div><span style="color:#8c8296;">Vấn đề cốt lõi:</span> <strong id="slipConcern">@Model.PrimaryConcern</strong></div>
+                <div><span style="color:#8c8296;">Điểm da liễu:</span> <strong id="slipScore" style="color:#985c7e;">@Model.SkinHealthScore / 100</strong></div>
+            </div>
+
+            <div style="background: #fdfafc; border: 1px solid #eee7ed; border-radius: 9px; padding: 12px 14px; margin-bottom: 14px; font-size: 12px; color: #51455d; line-height: 1.5;">
+                <strong style="color: #985c7e; display:block; margin-bottom: 3px;">Nhận định từ Luna AI:</strong>
+                <span id="slipDiagnosis">@Model.AiDiagnosis</span>
+            </div>
+
+            <div style="margin-bottom: 14px;">
+                <strong style="font-size: 12px; color: #302744; display:block; margin-bottom: 4px;">Liệu trình được chỉ định:</strong>
+                <ul id="slipServices" style="margin: 0; padding-left: 20px; font-size: 12px; color: #554867; line-height: 1.6;">
+                    @foreach (var s in Model.RecommendedServices)
+                    {
+                        <li>@s</li>
+                    }
+                </ul>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 24px; padding-top: 14px; border-top: 1px dashed #d5cedc; font-size: 11px;">
+                <div>
+                    <div>Ngày tư vấn: <strong>@DateTime.Now.ToString("dd/MM/yyyy HH:mm")</strong></div>
+                    <div style="color: #9c91a6; margin-top: 2px;">Mã phiếu: <strong>TV-@DateTime.Now.ToString("yyyyMMdd")-001</strong></div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="color: #8c8296; margin-bottom: 24px;">Bác sĩ phụ trách chuyên môn</div>
+                    <strong style="font-size: 12px; color: #382d47;">@Model.AssignedDoctor</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="customer-modal-footer">
+            <button type="button" class="customer-secondary-btn" id="btnCancelPrint">Đóng</button>
+            <button type="button" class="customer-primary-btn" id="btnTriggerPrint">
+                🖨 Thực hiện In / Lưu PDF
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.getElementById("skinAnalysisForm");
+            const btnAnalyze = document.getElementById("btnAnalyzeSkin");
+            const spinner = document.getElementById("analyzeSpinner");
+
+            // Elements for Result display
+            const dispScore = document.getElementById("dispScore");
+            const dispDiagnosis = document.getElementById("dispDiagnosis");
+            const dispServicesList = document.getElementById("dispServicesList");
+            const dispCosmeticsList = document.getElementById("dispCosmeticsList");
+            const dispRoutineList = document.getElementById("dispRoutineList");
+            const dispImprovement = document.getElementById("dispImprovement");
+            const resultSubtitle = document.getElementById("resultCustomerSubtitle");
+
+            // Print modal elements
+            const printModal = document.getElementById("printConsultModal");
+            const btnPreviewPrint = document.getElementById("btnPreviewPrint");
+            const btnPrintConsultation = document.getElementById("btnPrintConsultation");
+            const closePrintModal = document.getElementById("closePrintModal");
+            const btnCancelPrint = document.getElementById("btnCancelPrint");
+            const btnTriggerPrint = document.getElementById("btnTriggerPrint");
+            const btnResetDiagnosis = document.getElementById("btnResetDiagnosis");
+
+            // Slip fields
+            const slipName = document.getElementById("slipName");
+            const slipPhone = document.getElementById("slipPhone");
+            const slipAgeGender = document.getElementById("slipAgeGender");
+            const slipSkinType = document.getElementById("slipSkinType");
+            const slipConcern = document.getElementById("slipConcern");
+            const slipScore = document.getElementById("slipScore");
+            const slipDiagnosis = document.getElementById("slipDiagnosis");
+            const slipServices = document.getElementById("slipServices");
+
+            // Chat elements
+            const chatMessagesArea = document.getElementById("chatMessagesArea");
+            const aiChatSubmitForm = document.getElementById("aiChatSubmitForm");
+            const aiInputText = document.getElementById("aiInputText");
+            const chipsContainer = document.getElementById("chipsContainer");
+            const btnClearChat = document.getElementById("btnClearChat");
+
+            function escapeHtml(text) {
+                if (!text) return "";
+                const div = document.createElement("div");
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // Gửi form phân tích da
+            form.addEventListener("submit", async function (e) {
+                e.preventDefault();
+
+                btnAnalyze.disabled = true;
+                spinner.style.display = "inline-block";
+
+                const payload = {
+                    CustomerName: document.getElementById("diagCustomerName").value.trim(),
+                    CustomerPhone: document.getElementById("diagCustomerPhone").value.trim(),
+                    Age: parseInt(document.getElementById("diagAge").value) || 25,
+                    Gender: document.getElementById("diagGender").value,
+                    SkinType: document.getElementById("diagSkinType").value,
+                    PrimaryConcern: document.getElementById("diagConcern").value,
+                    Lifestyle: document.getElementById("diagLifestyle").value.trim(),
+                    IsSensitive: document.getElementById("diagSensitive").checked
+                };
+
+                try {
+                    const response = await fetch("/AI/AnalyzeSkin", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const res = await response.json();
+                    if (res.success && res.session) {
+                        const s = res.session;
+
+                        // Cập nhật giao diện kết quả
+                        dispScore.textContent = s.skinHealthScore;
+                        dispDiagnosis.textContent = s.aiDiagnosis;
+                        dispImprovement.textContent = s.expectedImprovement;
+                        resultSubtitle.textContent = `Khách hàng: ${s.customerName} (${s.age} tuổi)`;
+
+                        // Cập nhật dịch vụ
+                        dispServicesList.innerHTML = s.recommendedServices.map(srv => `
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:#fdfafc; border:1px solid #eee7ed; border-radius:10px; padding:10px 14px;">
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <span style="color:#a76d8e; font-weight:700;">✓</span>
+                                    <span style="font-size:13px; font-weight:600; color:#362a43;">${escapeHtml(srv)}</span>
+                                </div>
+                                <span class="spa-ai-tag" style="font-size:10px;">ƯU TIÊN SỐ 1</span>
+                            </div>
+                        `).join("");
+
+                        // Cập nhật mỹ phẩm
+                        dispCosmeticsList.innerHTML = s.recommendedCosmetics.map(cos => `
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:#ffffff; border:1px solid #eee7ed; border-radius:10px; padding:10px 14px;">
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <span style="font-size:14px;">🧴</span>
+                                    <span style="font-size:12.5px; color:#42364f;">${escapeHtml(cos)}</span>
+                                </div>
+                                <span style="font-size:11px; color:#278c57; font-weight:700;">Chính hãng</span>
+                            </div>
+                        `).join("");
+
+                        // Cập nhật routine
+                        dispRoutineList.innerHTML = s.careRoutineSteps.map(r => `
+                            <div class="routine-step-pill">
+                                <span>✦</span>
+                                <div>${escapeHtml(r)}</div>
+                            </div>
+                        `).join("");
+
+                        // Cập nhật phiếu in
+                        slipName.textContent = s.customerName;
+                        slipPhone.textContent = s.customerPhone || '—';
+                        slipAgeGender.textContent = `${s.age} tuổi (${s.gender})`;
+                        slipSkinType.textContent = s.skinType;
+                        slipConcern.textContent = s.primaryConcern;
+                        slipScore.textContent = `${s.skinHealthScore} / 100`;
+                        slipDiagnosis.textContent = s.aiDiagnosis;
+                        slipServices.innerHTML = s.recommendedServices.map(srv => `<li>${escapeHtml(srv)}</li>`).join("");
+
+                        // Tự động cuộn đến phần kết quả
+                        document.getElementById("diagnosisResultCard").scrollIntoView({ behavior: "smooth" });
+                    }
+                } catch (err) {
+                    console.error("Lỗi khi phân tích AI:", err);
+                    alert("Có lỗi khi kết nối tới máy chủ chẩn đoán AI.");
+                } finally {
+                    btnAnalyze.disabled = false;
+                    spinner.style.display = "none";
+                }
+            });
+
+            // Mở modal in phiếu tư vấn
+            function openSlipModal() {
+                printModal.classList.add("show");
+            }
+
+            function closeSlipModal() {
+                printModal.classList.remove("show");
+            }
+
+            btnPreviewPrint.addEventListener("click", openSlipModal);
+            btnPrintConsultation.addEventListener("click", openSlipModal);
+            closePrintModal.addEventListener("click", closeSlipModal);
+            btnCancelPrint.addEventListener("click", closeSlipModal);
+
+            printModal.addEventListener("click", function (e) {
+                if (e.target === printModal) closeSlipModal();
+            });
+
+            btnTriggerPrint.addEventListener("click", function () {
+                window.print();
+            });
+
+            btnResetDiagnosis.addEventListener("click", function () {
+                document.getElementById("diagCustomerName").value = "";
+                document.getElementById("diagCustomerPhone").value = "";
+                document.getElementById("diagAge").value = "25";
+                document.getElementById("diagLifestyle").value = "";
+                document.getElementById("diagSensitive").checked = false;
+                document.getElementById("diagCustomerName").focus();
+            });
+
+            // Xử lý gửi tin nhắn Chatbot
+            async function sendMessage(text) {
+                if (!text || !text.trim()) return;
+
+                const timeNow = new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+
+                // Render User bubble
+                const userBubble = document.createElement("div");
+                userBubble.className = "chat-bubble-wrap user";
+                userBubble.innerHTML = `
+                    <div class="chat-bubble-user">${escapeHtml(text)}</div>
+                    <span class="chat-time-label">${timeNow}</span>
+                `;
+                chatMessagesArea.appendChild(userBubble);
+                aiInputText.value = "";
+                chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
+
+                // Render typing indicator
+                const typingBubble = document.createElement("div");
+                typingBubble.className = "chat-bubble-wrap ai";
+                typingBubble.id = "typingIndicator";
+                typingBubble.innerHTML = `
+                    <div class="chat-bubble-ai" style="padding: 8px 14px; font-style: italic; color: #8c8296;">
+                        Luna AI đang soạn câu trả lời...
+                    </div>
+                `;
+                chatMessagesArea.appendChild(typingBubble);
+                chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
+
+                try {
+                    const response = await fetch("/AI/SendChat", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            Message: text,
+                            CustomerName: document.getElementById("diagCustomerName").value.trim(),
+                            SkinType: document.getElementById("diagSkinType").value
+                        })
+                    });
+
+                    const res = await response.json();
+                    typingBubble.remove();
+
+                    if (res.success) {
+                        const formattedReply = res.reply
+                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/\n/g, '<br />');
+
+                        const aiBubble = document.createElement("div");
+                        aiBubble.className = "chat-bubble-wrap ai";
+                        aiBubble.innerHTML = `
+                            <div class="chat-bubble-ai">${formattedReply}</div>
+                            <span class="chat-time-label">${timeNow}</span>
+                        `;
+                        chatMessagesArea.appendChild(aiBubble);
+
+                        // Cập nhật chips gợi ý nếu có
+                        if (res.suggestedChips && res.suggestedChips.length > 0) {
+                            chipsContainer.innerHTML = res.suggestedChips.map(c => `
+                                <button type="button" class="ai-quick-chip" data-query="${escapeHtml(c)}">
+                                    ✦ ${escapeHtml(c)}
+                                </button>
+                            `).join("");
+                            attachChipEvents();
+                        }
+                    }
+                } catch (err) {
+                    typingBubble.remove();
+                    console.error("Chat error:", err);
+                }
+
+                chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
+            }
+
+            aiChatSubmitForm.addEventListener("submit", function (e) {
+                e.preventDefault();
+                sendMessage(aiInputText.value);
+            });
+
+            function attachChipEvents() {
+                document.querySelectorAll(".ai-quick-chip").forEach(chip => {
+                    chip.addEventListener("click", function () {
+                        const q = this.getAttribute("data-query");
+                        sendMessage(q);
+                    });
+                });
+            }
+
+            attachChipEvents();
+
+            btnClearChat.addEventListener("click", function () {
+                if (confirm("Bạn có muốn làm mới lịch sử cuộc trò chuyện không?")) {
+                    chatMessagesArea.innerHTML = `
+                        <div class="chat-bubble-wrap ai">
+                            <div class="chat-bubble-ai">
+                                Chào bạn! Mình là Trợ lý Luna AI. Bạn cần tư vấn liệu trình hay giải đáp thắc mắc gì về dịch vụ Spa cứ hỏi mình nhé!
+                            </div>
+                            <span class="chat-time-label">Vừa xong</span>
+                        </div>
+                    `;
+                }
+            });
+        });
+    </script>
+}

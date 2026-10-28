@@ -1,0 +1,59 @@
+@model IEnumerable<GiaoDienSpa.Controllers.DoctorPatientRecord>
+@{
+    ViewData["Title"] = "Hồ Sơ Bệnh Án Da Liễu Điện Tử";
+}
+
+<div class="customer-page">
+    <div class="customer-page-header">
+        <div>
+            <div class="customer-breadcrumb">
+                <a asp-controller="Doctor" asp-action="Dashboard" style="text-decoration:none; color:inherit;">🩺 Bác sĩ</a> / Bệnh án điện tử
+            </div>
+            <h1>Hồ Sơ Bệnh Án & Lịch Sử Lâm Sàng Khách Hàng</h1>
+            <p>Theo dõi tiến trình hồi phục của từng bệnh nhân, lịch sử năng lượng laser và hình ảnh đối chiếu qua các buổi.</p>
+        </div>
+
+        <button class="customer-primary-btn" style="background: #2b7bb9;" onclick="alert('Đã sẵn sàng tạo hồ sơ bệnh án da liễu mới!')">
+            <span>＋</span> Tạo Bệnh Án Mới
+        </button>
+    </div>
+
+    <div class="customer-table-card" style="margin-top: 18px;">
+        <div class="customer-table-wrapper">
+            <table class="customer-table">
+                <thead>
+                    <tr>
+                        <th>MÃ HỒ SƠ</th>
+                        <th>HỌ VÀ TÊN</th>
+                        <th>CHẨN ĐOÁN LÂM SÀNG</th>
+                        <th>PHÁC ĐỒ ĐIỀU TRỊ</th>
+                        <th>LẦN ĐIỀU TRỊ GẦN NHẤT</th>
+                        <th>TRẠNG THÁI</th>
+                        <th>THAO TÁC</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model)
+                    {
+                        <tr>
+                            <td><strong style="color: #2b7bb9;">@p.PatientCode</strong></td>
+                            <td>
+                                <strong>@p.PatientName</strong>
+                                <div style="font-size: 11.5px; color: #777;">@p.Age tuổi • @p.Gender • @p.Phone</div>
+                            </td>
+                            <td>@p.SkinDiagnosis</td>
+                            <td><span class="service-badge-pill" style="background:#e8f3fb; color:#2b7bb9;">@p.CurrentProtocol</span></td>
+                            <td>@p.LastSessionDate.ToString("dd/MM/yyyy")</td>
+                            <td><span class="customer-status-badge status-active">Đang điều trị</span></td>
+                            <td>
+                                <a asp-controller="Doctor" asp-action="AiDiagnosis" class="btn-approve-quick" style="text-decoration: none; background:#e8f3fb; color:#2b7bb9; border-color:#bedbf2;">
+                                    Xem bệnh án ➤
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

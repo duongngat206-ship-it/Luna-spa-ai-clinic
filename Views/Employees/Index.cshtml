@@ -1,0 +1,548 @@
+@model IEnumerable<GiaoDienSpa.Models.Employee>
+
+@{
+    ViewData["Title"] = "Quản lý nhân viên";
+}
+
+<div class="customer-page employee-page">
+
+    <!-- TIÊU ĐỀ TRANG -->
+    <div class="customer-page-header">
+        <div>
+            <div class="customer-breadcrumb">LUNA SPA / Quản trị nhân sự</div>
+            <h1>Quản lý nhân viên & Kỹ thuật viên</h1>
+            <p>Hồ sơ chuyên môn, đánh giá tay nghề, phân bổ ca làm việc và điều phối AI.</p>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="spa-ai-btn" id="openAiShiftModal" type="button">
+                <span>✨</span> AI Phân tích ca trực
+            </button>
+            <button class="customer-primary-btn" id="openEmployeeModal" type="button">
+                <span>＋</span> Thêm nhân viên
+            </button>
+        </div>
+    </div>
+
+    <!-- THỐNG KÊ NHÂN SỰ -->
+    <div class="customer-stats">
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-purple">♧</div>
+            <div>
+                <span class="customer-stat-label">Tổng nhân viên</span>
+                <strong id="totalEmployees">@ViewBag.TotalEmployees</strong>
+                <small>Nhân sự chính thức</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-green">✓</div>
+            <div>
+                <span class="customer-stat-label">Đang làm việc / Trong ca</span>
+                <strong id="workingEmployees">@ViewBag.WorkingEmployees</strong>
+                <small>Sẵn sàng phục vụ khách</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-orange">★</div>
+            <div>
+                <span class="customer-stat-label">Kỹ thuật viên xuất sắc</span>
+                <strong id="topRatedEmployees">@ViewBag.TopRated</strong>
+                <small>Đánh giá khách hàng ≥ 4.9★</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-blue">☾</div>
+            <div>
+                <span class="customer-stat-label">Nghỉ phép / Nghỉ ca</span>
+                <strong id="onLeaveEmployees">@ViewBag.OnLeave</strong>
+                <small>Theo lịch đăng ký tuần</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI SMART BANNER -->
+    <div class="spa-ai-banner">
+        <div class="spa-ai-banner-left">
+            <div class="spa-ai-icon-pulse">✦</div>
+            <div class="spa-ai-content">
+                <span class="spa-ai-tag">✨ TRỢ LÝ ĐIỀU PHỐI AI</span>
+                <p class="spa-ai-text" id="aiBannerSummary">
+                    Dự báo khung giờ 17:00 – 20:00 hôm nay có 14 ca trị liệu da mụn & laser. Hệ thống gợi ý tăng cường 2 chuyên viên từ ca sáng để đảm bảo chất lượng dịch vụ chuẩn 5 sao.
+                </p>
+            </div>
+        </div>
+        <button class="spa-ai-btn" id="aiBannerActionBtn" type="button">Xem giải pháp điều phối</button>
+    </div>
+
+    <!-- DANH SÁCH NHÂN VIÊN -->
+    <div class="customer-content-card">
+        <div class="customer-content-heading">
+            <div>
+                <h2>Danh sách nhân sự Luna Spa</h2>
+                <p>Theo dõi kỹ năng trị liệu, chuyên môn và tình trạng trực ca thực tế.</p>
+            </div>
+            <span class="customer-total-badge" id="employeeCountBadge">@Model.Count() nhân viên</span>
+        </div>
+
+        <div class="customer-toolbar">
+            <div class="customer-search-box">
+                <span>⌕</span>
+                <input type="text" id="employeeSearch"
+                       placeholder="Tìm theo tên, mã NV, số điện thoại, chuyên môn..." />
+            </div>
+
+            <select id="employeePositionFilter" class="customer-filter">
+                <option value="">Tất cả vị trí</option>
+                <option value="Quản lý">Quản lý</option>
+                <option value="Bác sĩ Da liễu">Bác sĩ Da liễu</option>
+                <option value="Kỹ thuật viên">Kỹ thuật viên</option>
+                <option value="Lễ tân">Lễ tân & Tư vấn</option>
+            </select>
+
+            <select id="employeeShiftFilter" class="customer-filter">
+                <option value="">Tất cả ca làm việc</option>
+                <option value="Ca sáng">Ca sáng (08:30 - 16:30)</option>
+                <option value="Ca chiều">Ca chiều (13:30 - 21:00)</option>
+                <option value="Toàn thời gian">Toàn thời gian</option>
+            </select>
+
+            <select id="employeeStatusFilter" class="customer-filter">
+                <option value="">Tất cả trạng thái</option>
+                <option value="Đang làm việc">Đang làm việc</option>
+                <option value="Đang trong ca">Đang trong ca</option>
+                <option value="Tạm nghỉ">Tạm nghỉ</option>
+            </select>
+
+            <button class="customer-secondary-btn" id="resetEmployeeFilter" type="button">
+                ↺ Làm mới
+            </button>
+        </div>
+
+        <div class="customer-table-wrap">
+            <table class="customer-table">
+                <thead>
+                    <tr>
+                        <th>NHÂN VIÊN</th>
+                        <th>VỊ TRÍ & CHUYÊN MÔN</th>
+                        <th>LIÊN HỆ</th>
+                        <th>ĐÁNH GIÁ & KINH NGHIỆM</th>
+                        <th>CA TRỰC HIỆN TẠI</th>
+                        <th>TRẠNG THÁI</th>
+                        <th class="customer-action-heading">THAO TÁC</th>
+                    </tr>
+                </thead>
+                <tbody id="employeeTableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="customer-table-footer">
+            <span id="employeePageInfo">Hiển thị @Model.Count() nhân viên</span>
+            <div class="customer-pagination">
+                <button type="button" disabled>‹</button>
+                <button type="button" class="current-page">1</button>
+                <button type="button" disabled>›</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL THÊM / SỬA NHÂN VIÊN -->
+<div class="customer-modal-backdrop" id="employeeModal">
+    <div class="customer-modal">
+        <div class="customer-modal-header">
+            <div>
+                <h2 id="employeeModalTitle">Thêm nhân sự mới</h2>
+                <p>Điền thông tin hồ sơ và xếp lịch làm việc cho nhân viên.</p>
+            </div>
+            <button type="button" class="customer-modal-close" id="closeEmployeeModal">×</button>
+        </div>
+
+        <form id="employeeForm">
+            <input type="hidden" id="employeeEditId" />
+
+            <div class="customer-form-grid">
+                <div class="customer-form-group">
+                    <label for="empName">Họ và tên <span>*</span></label>
+                    <input id="empName" type="text" placeholder="Ví dụ: Nguyễn Thu Trang" required />
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="empPosition">Vị trí công việc <span>*</span></label>
+                    <select id="empPosition" required>
+                        <option value="Kỹ thuật viên Spa">Kỹ thuật viên Spa</option>
+                        <option value="Kỹ thuật viên Trưởng">Kỹ thuật viên Trưởng</option>
+                        <option value="Bác sĩ Da liễu">Bác sĩ Da liễu</option>
+                        <option value="Chuyên viên Lễ tân & Tư vấn">Chuyên viên Lễ tân & Tư vấn</option>
+                        <option value="Quản lý Vận hành">Quản lý Vận hành</option>
+                    </select>
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="empSpecialization">Chuyên môn trị liệu <span>*</span></label>
+                    <input id="empSpecialization" type="text" placeholder="Ví dụ: Trẻ hóa Hifu, Trị mụn y khoa..." required />
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="empPhone">Số điện thoại <span>*</span></label>
+                    <input id="empPhone" type="tel" placeholder="Ví dụ: 0912 345 678" required />
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="empEmail">Email</label>
+                    <input id="empEmail" type="email" placeholder="example@lunaspa.vn" />
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="empExperience">Số năm kinh nghiệm</label>
+                    <input id="empExperience" type="number" min="0" max="30" value="2" />
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="empShift">Ca làm việc</label>
+                    <select id="empShift">
+                        <option value="Ca sáng (08:30 - 16:30)">Ca sáng (08:30 - 16:30)</option>
+                        <option value="Ca chiều (13:30 - 21:00)">Ca chiều (13:30 - 21:00)</option>
+                        <option value="Toàn thời gian (09:00 - 18:00)">Toàn thời gian (09:00 - 18:00)</option>
+                    </select>
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="empStatus">Trạng thái làm việc</label>
+                    <select id="empStatus">
+                        <option value="Đang làm việc">Đang làm việc</option>
+                        <option value="Đang trong ca">Đang trong ca</option>
+                        <option value="Tạm nghỉ">Tạm nghỉ</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="customer-modal-footer">
+                <button type="button" class="customer-secondary-btn" id="cancelEmployeeModal">Hủy</button>
+                <button type="submit" class="customer-primary-btn" id="saveEmployeeBtn">Lưu hồ sơ</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL AI PHÂN TÍCH CA TRỰC -->
+<div class="customer-modal-backdrop" id="aiShiftModal">
+    <div class="customer-modal" style="max-width: 600px;">
+        <div class="customer-modal-header" style="background: linear-gradient(135deg, #fdf8fb 0%, #faedf4 100%);">
+            <div>
+                <span class="spa-ai-tag">✨ TRỢ LÝ ĐIỀU PHỐI NHÂN SỰ LUNA AI</span>
+                <h2 style="color: #985c7e; margin-top: 4px;">Tối ưu hóa ca trực & Khớp kỹ năng</h2>
+                <p>Mô hình AI phân tích tải công việc theo lịch hẹn và đề xuất phân công tối ưu.</p>
+            </div>
+            <button type="button" class="customer-modal-close" id="closeAiShiftModal">×</button>
+        </div>
+
+        <div style="padding: 22px 25px;">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
+                <div style="background: #fdfafc; padding: 14px; border-radius: 10px; border: 1px solid #eee7ed; text-align: center;">
+                    <span style="font-size: 11px; color: #8c8296;">Ca sáng</span>
+                    <strong style="display: block; font-size: 20px; color: #302744; margin-top: 3px;" id="aiMorningCount">3 KTV</strong>
+                    <small style="color: #278c57; font-size: 10px;">Đủ định mức</small>
+                </div>
+                <div style="background: #fdfafc; padding: 14px; border-radius: 10px; border: 1px solid #eee7ed; text-align: center;">
+                    <span style="font-size: 11px; color: #8c8296;">Ca chiều (Cao điểm)</span>
+                    <strong style="display: block; font-size: 20px; color: #d88a2c; margin-top: 3px;" id="aiAfternoonCount">2 KTV</strong>
+                    <small style="color: #d88a2c; font-size: 10px;">Thiếu 1 KTV Laser</small>
+                </div>
+                <div style="background: #fdfafc; padding: 14px; border-radius: 10px; border: 1px solid #eee7ed; text-align: center;">
+                    <span style="font-size: 11px; color: #8c8296;">Toàn thời gian</span>
+                    <strong style="display: block; font-size: 20px; color: #985c7e; margin-top: 3px;" id="aiFulltimeCount">2 BS/QL</strong>
+                    <small style="color: #985c7e; font-size: 10px;">Trực tuyến</small>
+                </div>
+            </div>
+
+            <div style="background: #fdf8fb; border-left: 4px solid #a76d8e; padding: 14px 16px; border-radius: 0 10px 10px 0; margin-bottom: 18px;">
+                <strong style="display: block; font-size: 13px; color: #433658; margin-bottom: 5px;">
+                    ✦ Đề xuất ghép ca thông minh:
+                </strong>
+                <p style="margin: 0; font-size: 12px; color: #625871; line-height: 1.6;">
+                    Khung 18:00 có 3 khách VIP đặt dịch vụ <em>Nâng cơ Hifu & Trị liệu nám</em>. AI đề xuất chuyển Kỹ thuật viên trưởng <strong>Nguyễn Thu Trang (NV001)</strong> đảm nhiệm ca 18:00 - 20:30 để tối đa mức độ hài lòng của khách.
+                </p>
+            </div>
+
+            <div style="background: #fff9ee; border: 1px solid #f6e0b5; border-radius: 10px; padding: 12px 14px; font-size: 12px; color: #825a17;">
+                ★ <strong>Khen thưởng AI:</strong> Bác sĩ Lê Hoàng Yến và KTV Nguyễn Thu Trang đạt hiệu suất phục vụ 100% không có phản hồi phàn nàn trong 30 ngày qua.
+            </div>
+        </div>
+
+        <div class="customer-modal-footer">
+            <button type="button" class="customer-secondary-btn" id="closeAiShiftModalBtn">Đóng</button>
+            <button type="button" class="customer-primary-btn" id="applyAiShiftBtn">
+                ✓ Phê duyệt điều phối này
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Dữ liệu nhân viên khởi tạo từ Model backend
+    let employees = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }));
+
+    const tableBody = document.getElementById("employeeTableBody");
+    const modal = document.getElementById("employeeModal");
+    const form = document.getElementById("employeeForm");
+    const aiModal = document.getElementById("aiShiftModal");
+
+    function escapeHtml(value) {
+        return String(value ?? "").replace(/[&<>"']/g, function (c) {
+            return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[c];
+        });
+    }
+
+    function renderEmployees() {
+        const keyword = document.getElementById("employeeSearch").value.trim().toLowerCase();
+        const position = document.getElementById("employeePositionFilter").value;
+        const shift = document.getElementById("employeeShiftFilter").value;
+        const status = document.getElementById("employeeStatusFilter").value;
+
+        const filtered = employees.filter(e => {
+            const matchKeyword =
+                e.fullName.toLowerCase().includes(keyword) ||
+                (e.employeeCode && e.employeeCode.toLowerCase().includes(keyword)) ||
+                e.phone.toLowerCase().includes(keyword) ||
+                e.specialization.toLowerCase().includes(keyword);
+
+            const matchPosition = !position || e.position.includes(position);
+            const matchShift = !shift || e.shift.includes(shift);
+            const matchStatus = !status || e.status === status;
+
+            return matchKeyword && matchPosition && matchShift && matchStatus;
+        });
+
+        tableBody.innerHTML = "";
+
+        if (filtered.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="customer-empty">
+                        Không tìm thấy nhân viên phù hợp với bộ lọc.
+                    </td>
+                </tr>`;
+        } else {
+            filtered.forEach(e => {
+                const initials = e.fullName.trim().split(/\s+/).slice(-2)
+                    .map(w => w.charAt(0)).join("").toUpperCase();
+
+                const isDuty = e.status === "Đang trong ca";
+                const isWorking = e.status === "Đang làm việc";
+                const statusBadgeClass = isDuty ? "status-active" : (isWorking ? "status-active" : "status-inactive");
+                const statusIconColor = isDuty ? "#985c7e" : (isWorking ? "#43ae76" : "#aaa4ad");
+
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>
+                        <div class="customer-person">
+                            <div class="customer-avatar" style="${isDuty ? 'background:#f7edf3; color:#985c7e;' : ''}">${escapeHtml(initials)}</div>
+                            <div>
+                                <strong>${escapeHtml(e.fullName)}</strong>
+                                <small>${escapeHtml(e.employeeCode || ('NV' + String(e.employeeId).padStart(3, '0')))}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <strong style="color:#41364f; font-size:12px;">${escapeHtml(e.position)}</strong>
+                        <div style="margin-top:4px;">
+                            <span class="employee-specialty-badge">${escapeHtml(e.specialization)}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div>${escapeHtml(e.phone)}</div>
+                        <small style="color:#9c93a7; font-size:11px;">${escapeHtml(e.email || '—')}</small>
+                    </td>
+                    <td>
+                        <div class="employee-rating">★ ${Number(e.rating).toFixed(2)}</div>
+                        <small class="employee-sessions-badge" style="display:block; margin-top:3px;">
+                            ${e.experienceYears} năm KN • ${e.completedSessions || 0} ca
+                        </small>
+                    </td>
+                    <td>
+                        <span class="employee-shift-tag">${escapeHtml(e.shift)}</span>
+                    </td>
+                    <td>
+                        <span class="customer-status ${statusBadgeClass}">
+                            <i style="background: ${statusIconColor};"></i>${escapeHtml(e.status)}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="customer-row-actions">
+                            <button type="button" title="Xem phân tích AI & Chi tiết" data-action="view" data-id="${e.employeeId}">◉</button>
+                            <button type="button" title="Chỉnh sửa hồ sơ" data-action="edit" data-id="${e.employeeId}">✎</button>
+                            <button type="button" title="Xóa nhân sự" data-action="delete" data-id="${e.employeeId}">⌫</button>
+                        </div>
+                    </td>`;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Cập nhật các con số thống kê
+        const workingCount = employees.filter(e => e.status === "Đang làm việc" || e.status === "Đang trong ca").length;
+        const topCount = employees.filter(e => e.rating >= 4.9).length;
+        const leaveCount = employees.filter(e => e.status === "Tạm nghỉ").length;
+
+        document.getElementById("totalEmployees").textContent = employees.length;
+        document.getElementById("workingEmployees").textContent = workingCount;
+        document.getElementById("topRatedEmployees").textContent = topCount;
+        document.getElementById("onLeaveEmployees").textContent = leaveCount;
+
+        document.getElementById("employeeCountBadge").textContent = `${filtered.length} nhân viên`;
+        document.getElementById("employeePageInfo").textContent = `Đang hiển thị ${filtered.length} trong tổng số ${employees.length} nhân sự`;
+    }
+
+    function openModal(emp = null) {
+        form.reset();
+        document.getElementById("employeeEditId").value = "";
+        document.getElementById("employeeModalTitle").textContent = emp ? "Chỉnh sửa nhân viên" : "Thêm nhân viên mới";
+
+        if (emp) {
+            document.getElementById("employeeEditId").value = emp.employeeId;
+            document.getElementById("empName").value = emp.fullName;
+            document.getElementById("empPosition").value = emp.position;
+            document.getElementById("empSpecialization").value = emp.specialization;
+            document.getElementById("empPhone").value = emp.phone;
+            document.getElementById("empEmail").value = emp.email || "";
+            document.getElementById("empExperience").value = emp.experienceYears;
+            document.getElementById("empShift").value = emp.shift;
+            document.getElementById("empStatus").value = emp.status;
+        }
+
+        modal.classList.add("show");
+    }
+
+    function closeModal() {
+        modal.classList.remove("show");
+    }
+
+    document.getElementById("openEmployeeModal").addEventListener("click", () => openModal());
+    document.getElementById("closeEmployeeModal").addEventListener("click", closeModal);
+    document.getElementById("cancelEmployeeModal").addEventListener("click", closeModal);
+
+    modal.addEventListener("click", function (e) {
+        if (e.target === modal) closeModal();
+    });
+
+    // AI Shift Modal
+    function openAiModal() {
+        const morning = employees.filter(e => e.shift.includes("sáng") && e.status !== "Tạm nghỉ").length;
+        const afternoon = employees.filter(e => e.shift.includes("chiều") && e.status !== "Tạm nghỉ").length;
+        const fulltime = employees.filter(e => e.shift.includes("Toàn thời gian") && e.status !== "Tạm nghỉ").length;
+
+        document.getElementById("aiMorningCount").textContent = `${morning} KTV`;
+        document.getElementById("aiAfternoonCount").textContent = `${afternoon} KTV`;
+        document.getElementById("aiFulltimeCount").textContent = `${fulltime} BS/QL`;
+
+        aiModal.classList.add("show");
+    }
+
+    document.getElementById("openAiShiftModal").addEventListener("click", openAiModal);
+    document.getElementById("aiBannerActionBtn").addEventListener("click", openAiModal);
+    document.getElementById("closeAiShiftModal").addEventListener("click", () => aiModal.classList.remove("show"));
+    document.getElementById("closeAiShiftModalBtn").addEventListener("click", () => aiModal.classList.remove("show"));
+    document.getElementById("applyAiShiftBtn").addEventListener("click", function() {
+        alert("Đã cập nhật biểu đồ phân bổ ca trực thông minh do AI đề xuất!");
+        aiModal.classList.remove("show");
+    });
+
+    aiModal.addEventListener("click", function(e) {
+        if (e.target === aiModal) aiModal.classList.remove("show");
+    });
+
+    // Lọc và Tìm kiếm
+    document.getElementById("employeeSearch").addEventListener("input", renderEmployees);
+    document.getElementById("employeePositionFilter").addEventListener("change", renderEmployees);
+    document.getElementById("employeeShiftFilter").addEventListener("change", renderEmployees);
+    document.getElementById("employeeStatusFilter").addEventListener("change", renderEmployees);
+
+    document.getElementById("resetEmployeeFilter").addEventListener("click", function () {
+        document.getElementById("employeeSearch").value = "";
+        document.getElementById("employeePositionFilter").value = "";
+        document.getElementById("employeeShiftFilter").value = "";
+        document.getElementById("employeeStatusFilter").value = "";
+        renderEmployees();
+    });
+
+    // Lưu / Thêm nhân viên
+    form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const editId = document.getElementById("employeeEditId").value;
+        const empData = {
+            employeeId: editId ? Number(editId) : 0,
+            fullName: document.getElementById("empName").value.trim(),
+            position: document.getElementById("empPosition").value,
+            specialization: document.getElementById("empSpecialization").value.trim(),
+            phone: document.getElementById("empPhone").value.trim(),
+            email: document.getElementById("empEmail").value.trim(),
+            experienceYears: Number(document.getElementById("empExperience").value) || 1,
+            shift: document.getElementById("empShift").value,
+            status: document.getElementById("empStatus").value
+        };
+
+        if (editId) {
+            const index = employees.findIndex(x => x.employeeId === Number(editId));
+            if (index !== -1) {
+                empData.employeeCode = employees[index].employeeCode;
+                empData.rating = employees[index].rating;
+                empData.completedSessions = employees[index].completedSessions;
+                empData.aiScoreNote = employees[index].aiScoreNote;
+                employees[index] = empData;
+            }
+        } else {
+            const newId = employees.length ? Math.max(...employees.map(x => x.employeeId)) + 1 : 1;
+            empData.employeeId = newId;
+            empData.employeeCode = "NV" + String(newId).padStart(3, "0");
+            empData.rating = 5.0;
+            empData.completedSessions = 0;
+            empData.aiScoreNote = "Nhân sự mới được ghi nhận vào hệ thống Luna Spa.";
+            employees.unshift(empData);
+        }
+
+        closeModal();
+        renderEmployees();
+    });
+
+    // Click hàng trong bảng
+    tableBody.addEventListener("click", function (e) {
+        const btn = e.target.closest("button[data-action]");
+        if (!btn) return;
+
+        const id = Number(btn.dataset.id);
+        const emp = employees.find(x => x.employeeId === id);
+        if (!emp) return;
+
+        const action = btn.dataset.action;
+
+        if (action === "edit") {
+            openModal(emp);
+        } else if (action === "view") {
+            alert(
+                `HỒ SƠ NHÂN SỰ & ĐÁNH GIÁ AI - LUNA SPA\n\n` +
+                `Họ và tên: ${emp.fullName} (${emp.employeeCode})\n` +
+                `Vị trí: ${emp.position}\n` +
+                `Chuyên môn: ${emp.specialization}\n` +
+                `Điện thoại: ${emp.phone}\n` +
+                `Email: ${emp.email || 'Chưa cập nhật'}\n` +
+                `Kinh nghiệm: ${emp.experienceYears} năm\n` +
+                `Đánh giá tay nghề: ★ ${Number(emp.rating).toFixed(2)}/5.0 (${emp.completedSessions || 0} ca trị liệu)\n` +
+                `Ca trực: ${emp.shift}\n` +
+                `Trạng thái: ${emp.status}\n\n` +
+                `✨ Nhận xét AI: ${emp.aiScoreNote || 'Chuyên môn đạt chuẩn đào tạo của Luna Spa.'}`
+            );
+        } else if (action === "delete") {
+            if (confirm(`Bạn có chắc muốn xóa nhân viên "${emp.fullName}" (${emp.employeeCode})?`)) {
+                employees = employees.filter(x => x.employeeId !== id);
+                renderEmployees();
+            }
+        }
+    });
+
+    renderEmployees();
+</script>
+}

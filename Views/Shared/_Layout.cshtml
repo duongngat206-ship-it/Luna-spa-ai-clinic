@@ -1,0 +1,1482 @@
+@{
+    var currentCtrl = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
+    var currentAct = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
+    bool isPublicPortal = (currentCtrl == "Home" && currentAct == "Index") || (ViewBag.IsPublicPage == true);
+
+    var userName = Context.Session.GetString("UserName");
+    var userEmail = Context.Session.GetString("UserEmail");
+    var userRole = Context.Session.GetString("UserRole");
+    var userRoleTitle = Context.Session.GetString("UserRoleTitle") ?? "Khách hàng Thân thiết";
+    var userAvatar = Context.Session.GetString("UserAvatarInitials") ?? "KH";
+    var userColor = Context.Session.GetString("UserAvatarColor") ?? "#a76d8e";
+    bool isLoggedIn = !string.IsNullOrEmpty(userName);
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - LUNA SPA & AI CLINIC</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+    
+    <!-- BOOTSTRAP 5.3 & FONT AWESOME 6 ICONS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="@(isPublicPortal ? "public-portal-body" : "admin-layout-body")">
+
+@if (isPublicPortal)
+{
+    <!-- HEADER TRANG CHỦ CÔNG KHAI -->
+    <header class="portal-main-header">
+        <!-- TOP ANNOUNCEMENT BAR -->
+        <!-- TOP ANNOUNCEMENT BAR & QUICK ROLE ACCESS -->
+        <div class="portal-top-bar">
+            <div class="portal-container portal-top-bar-inner">
+                <div class="top-bar-left">
+                    <span>📞 Hotline 24/7: <strong>1900 888 999</strong></span>
+                    <span class="bar-sep">•</span>
+                    <span>⏰ 08:30 – 21:00</span>
+                    <span class="bar-sep">•</span>
+                    <span>📍 123 Nguyễn Huệ, Quận 1, TP. HCM</span>
+                </div>
+                <div class="top-bar-right">
+                    @if (!isLoggedIn)
+                    {
+                        <div class="top-bar-quick-roles">
+                            <span class="quick-title">⚡ Đăng nhập nhanh 1-Click:</span>
+                            <button type="button" class="quick-role-badge btn-demo-quick" data-role="Admin" title="Đăng nhập Quản trị viên">
+                                🛡️ Admin
+                            </button>
+                            <button type="button" class="quick-role-badge btn-demo-quick" data-role="Doctor" title="Đăng nhập Bác sĩ chuyên khoa">
+                                🩺 Bác sĩ
+                            </button>
+                            <button type="button" class="quick-role-badge btn-demo-quick" data-role="Staff" title="Đăng nhập Nhân viên (Kỹ thuật viên)">
+                                💆 Nhân viên
+                            </button>
+                            <button type="button" class="quick-role-badge btn-demo-quick" data-role="Customer" title="Đăng nhập Khách hàng VIP">
+                                👤 Khách hàng
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="ai-live-tag">✨ AI Online: Đang hỗ trợ chẩn đoán da</span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN NAVBAR -->
+        <nav class="portal-navbar">
+            <div class="portal-container portal-navbar-inner">
+                <a asp-controller="Home" asp-action="Index" class="portal-brand">
+                    <div class="portal-brand-logo">✿</div>
+                    <div class="portal-brand-text">
+                        <strong>LUNA SPA</strong>
+                        <small>AI Clinic & Luxury Care</small>
+                    </div>
+                </a>
+
+                <div class="portal-nav-links">
+                    <a asp-controller="Home" asp-action="Index" class="nav-link @(currentCtrl == "Home" && currentAct == "Index" ? "active" : "")">Trang chủ</a>
+                    <a href="/Home/Index#servicesSection" class="nav-link">Dịch vụ Spa</a>
+                    <a href="/Home/Index#aiHighlightsSection" class="nav-link">Công nghệ AI</a>
+                    <a href="/Home/Index#aiExperienceSection" class="nav-link">Soi da AI</a>
+                    <a asp-controller="AI" asp-action="Index" class="nav-link @(currentCtrl == "AI" ? "active" : "")">Tư vấn AI</a>
+                    <a asp-controller="Reports" asp-action="Index" class="nav-link @(currentCtrl == "Reports" ? "active" : "")">Báo cáo</a>
+                    <a href="/Home/Index#bookingSection" class="nav-link">Đặt lịch hẹn</a>
+                </div>
+
+                <div class="portal-nav-auth">
+                    @if (!isLoggedIn)
+                    {
+                        <button type="button" class="portal-auth-btn btn-ghost open-auth-modal-btn" data-mode="login">
+                            <span>🔑</span> Đăng nhập
+                        </button>
+                        <button type="button" class="portal-auth-btn btn-solid open-auth-modal-btn" data-mode="register">
+                            <span>✦</span> Đăng ký
+                        </button>
+                    }
+                    else
+                    {
+                        <div class="portal-user-badge open-user-profile-btn" id="portalUserProfileBtn" role="button" tabindex="0" title="Bấm để xem và chỉnh sửa hồ sơ cá nhân">
+                            <div class="portal-user-avatar" id="portalUserAvatar" style="background: @userColor;">@userAvatar</div>
+                            <div class="portal-user-info">
+                                <strong id="portalUserName">@userName <span style="font-size: 11px; opacity: 0.7;">✏️</span></strong>
+                                <span class="badge-role-pill" id="portalUserRole">@userRoleTitle</span>
+                            </div>
+                        </div>
+
+                        @if (userRole == "Admin")
+                        {
+                            <a href="/Admin/Dashboard" class="portal-auth-btn btn-dashboard">
+                                <span>🛡️</span> Cổng Quản Trị
+                            </a>
+                        }
+                        else if (userRole == "Doctor")
+                        {
+                            <a href="/Doctor/Dashboard" class="portal-auth-btn btn-dashboard" style="background: linear-gradient(135deg, #0284c7, #0369a1); color: white;">
+                                <span>🩺</span> Bàn Bác Sĩ
+                            </a>
+                        }
+                        else if (userRole == "Staff")
+                        {
+                            <a href="/Staff/Dashboard" class="portal-auth-btn btn-dashboard" style="background: linear-gradient(135deg, #0d9488, #0f766e); color: white;">
+                                <span>💆</span> Trạm KTV
+                            </a>
+                        }
+                        else if (userRole == "Customer")
+                        {
+                            <a href="/CustomerPortal/Index" class="portal-auth-btn btn-dashboard" style="background: linear-gradient(135deg, #d97706, #b45309); color: white;">
+                                <span>👑</span> Cổng Hội Viên VIP
+                            </a>
+                        }
+
+                        <button type="button" class="portal-auth-btn btn-logout open-logout-btn" title="Đăng xuất tài khoản">
+                            <span>⎋</span> Đăng xuất
+                        </button>
+                    }
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- MAIN BODY CỦA PUBLIC PORTAL -->
+    <main class="portal-body-wrapper">
+        @RenderBody()
+    </main>
+}
+else
+{
+    <!-- LAYOUT BẢNG QUẢN TRỊ NỘI BỘ (ADMIN, DOCTOR, STAFF, CUSTOMER) -->
+    <div class="spa-layout">
+
+        <aside class="spa-sidebar">
+            <div class="spa-brand">
+                <div class="spa-logo">✿</div>
+                <div>
+                    <strong>LUNA SPA</strong>
+                    <small>Management System</small>
+                </div>
+            </div>
+
+            @if (userRole == "Doctor")
+            {
+                <div class="spa-menu-title">BÁC SĨ CHUYÊN KHOA</div>
+
+                <nav class="spa-menu">
+                    <a asp-controller="Home" asp-action="Index" class="spa-menu-link">
+                        <span>🌐</span> Trang chủ công khai
+                    </a>
+
+                    <a href="/Doctor/Dashboard" class="spa-menu-link @(currentCtrl == "Doctor" && currentAct == "Dashboard" ? "active" : "")">
+                        <span>🩺</span> Bàn làm việc Bác sĩ
+                    </a>
+
+                    <a href="/Doctor/AiDiagnosis" class="spa-menu-link @(currentCtrl == "Doctor" && currentAct == "AiDiagnosis" ? "active" : "")">
+                        <span>🔬</span> Chẩn đoán hình ảnh AI
+                    </a>
+
+                    <a href="/Doctor/Treatments" class="spa-menu-link @(currentCtrl == "Doctor" && currentAct == "Treatments" ? "active" : "")">
+                        <span>📋</span> Phác đồ Laser & Da liễu
+                    </a>
+
+                    <a href="/Doctor/Patients" class="spa-menu-link @(currentCtrl == "Doctor" && currentAct == "Patients" ? "active" : "")">
+                        <span>👥</span> Bệnh án điện tử
+                    </a>
+
+                    <a asp-controller="Appointments" asp-action="Index" class="spa-menu-link @(currentCtrl == "Appointments" ? "active" : "")">
+                        <span>▣</span> Lịch khám lâm sàng
+                    </a>
+
+                    <a asp-controller="AI" asp-action="Index" class="spa-menu-link @(currentCtrl == "AI" ? "active" : "")">
+                        <span>✦</span> Trợ lý Luna AI Clinic
+                    </a>
+                </nav>
+            }
+            else if (userRole == "Staff")
+            {
+                <div class="spa-menu-title">KỸ THUẬT VIÊN & LỄ TÂN</div>
+
+                <nav class="spa-menu">
+                    <a asp-controller="Home" asp-action="Index" class="spa-menu-link">
+                        <span>🌐</span> Trang chủ công khai
+                    </a>
+
+                    <a href="/Staff/Dashboard" class="spa-menu-link @(currentCtrl == "Staff" && currentAct == "Dashboard" ? "active" : "")">
+                        <span>💆</span> Trạm tác nghiệp KTV
+                    </a>
+
+                    <a href="/Staff/CheckIn" class="spa-menu-link @(currentCtrl == "Staff" && currentAct == "CheckIn" ? "active" : "")">
+                        <span>🛎️</span> Tiếp đón Check-In
+                    </a>
+
+                    <a href="/Staff/Appointments" class="spa-menu-link @(currentCtrl == "Staff" && currentAct == "Appointments" ? "active" : "")">
+                        <span>📅</span> Lịch ca phục vụ
+                    </a>
+
+                    <a href="/Staff/POS" class="spa-menu-link @(currentCtrl == "Staff" && currentAct == "POS" ? "active" : "")">
+                        <span>🛒</span> Thu ngân POS & Mỹ phẩm
+                    </a>
+
+                    <a href="/Staff/Supplies" class="spa-menu-link @(currentCtrl == "Staff" && currentAct == "Supplies" ? "active" : "")">
+                        <span>📦</span> Kho vật tư buồng phòng
+                    </a>
+
+                    <a asp-controller="Inventory" asp-action="Index" class="spa-menu-link @(currentCtrl == "Inventory" ? "active" : "")">
+                        <span>▤</span> Kho tổng viện thẩm mỹ
+                    </a>
+
+                    <a asp-controller="AI" asp-action="Index" class="spa-menu-link @(currentCtrl == "AI" ? "active" : "")">
+                        <span>✦</span> Trợ lý Luna AI
+                    </a>
+                </nav>
+            }
+            else if (userRole == "Customer")
+            {
+                <div class="spa-menu-title">CỔNG HỘI VIÊN VIP</div>
+
+                <nav class="spa-menu">
+                    <a asp-controller="Home" asp-action="Index" class="spa-menu-link">
+                        <span>🌐</span> Trang chủ công khai
+                    </a>
+
+                    <a href="/CustomerPortal/Index" class="spa-menu-link @(currentCtrl == "CustomerPortal" && currentAct == "Index" ? "active" : "")">
+                        <span>👑</span> Cổng Hội Viên VIP
+                    </a>
+
+                    <a href="/CustomerPortal/Appointments" class="spa-menu-link @(currentCtrl == "CustomerPortal" && currentAct == "Appointments" ? "active" : "")">
+                        <span>📅</span> Lịch hẹn của tôi
+                    </a>
+
+                    <a href="/CustomerPortal/History" class="spa-menu-link @(currentCtrl == "CustomerPortal" && currentAct == "History" ? "active" : "")">
+                        <span>📸</span> Nhật ký cải thiện da AI
+                    </a>
+
+                    <a href="/CustomerPortal/MyPrescriptions" class="spa-menu-link @(currentCtrl == "CustomerPortal" && currentAct == "MyPrescriptions" ? "active" : "")">
+                        <span>💊</span> Toa mỹ phẩm tại nhà
+                    </a>
+
+                    <a href="/CustomerPortal/Vouchers" class="spa-menu-link @(currentCtrl == "CustomerPortal" && currentAct == "Vouchers" ? "active" : "")">
+                        <span>🎟️</span> Ví Voucher & Đổi điểm
+                    </a>
+
+                    <a asp-controller="AI" asp-action="Index" class="spa-menu-link @(currentCtrl == "AI" ? "active" : "")">
+                        <span>✦</span> Tư vấn Skincare AI
+                    </a>
+                </nav>
+            }
+            else
+            {
+                <div class="spa-menu-title">QUẢN TRỊ TỔNG THỂ</div>
+
+                <nav class="spa-menu">
+                    <a asp-controller="Home" asp-action="Index" class="spa-menu-link">
+                        <span>🌐</span> Trang chủ công khai
+                    </a>
+
+                    <a href="/Admin/Dashboard" class="spa-menu-link @((currentCtrl == "Admin" && currentAct == "Dashboard") || (currentCtrl == "Home" && currentAct == "Dashboard") ? "active" : "")">
+                        <span>▦</span> Tổng quan điều hành
+                    </a>
+
+                    <div class="spa-menu-title" style="margin-top: 14px;">NGHIỆP VỤ SPA</div>
+
+                    <a asp-controller="Customers" asp-action="Index" class="spa-menu-link @(currentCtrl == "Customers" ? "active" : "")">
+                        <span>♙</span> Khách hàng
+                    </a>
+
+                    <a asp-controller="Services" asp-action="Index" class="spa-menu-link @(currentCtrl == "Services" ? "active" : "")">
+                        <span>✧</span> Dịch vụ
+                    </a>
+
+                    <a asp-controller="Appointments" asp-action="Index" class="spa-menu-link @(currentCtrl == "Appointments" ? "active" : "")">
+                        <span>▣</span> Lịch hẹn
+                    </a>
+
+                    <a asp-controller="Employees" asp-action="Index" class="spa-menu-link @(currentCtrl == "Employees" ? "active" : "")">
+                        <span>♧</span> Nhân viên
+                    </a>
+
+                    <a asp-controller="Inventory" asp-action="Index" class="spa-menu-link @(currentCtrl == "Inventory" ? "active" : "")">
+                        <span>▤</span> Kho mỹ phẩm
+                    </a>
+
+                    <a asp-controller="Invoices" asp-action="Index" class="spa-menu-link @(currentCtrl == "Invoices" ? "active" : "")">
+                        <span>▧</span> Hóa đơn
+                    </a>
+
+                    <a asp-controller="AI" asp-action="Index" class="spa-menu-link @(currentCtrl == "AI" ? "active" : "")">
+                        <span>✦</span> Luna AI Studio
+                    </a>
+
+                    <a asp-controller="Reports" asp-action="Index" class="spa-menu-link @(currentCtrl == "Reports" ? "active" : "")">
+                        <span>▥</span> Báo cáo KPI & P&L
+                    </a>
+                </nav>
+            }
+
+            <div class="sidebar-user-block">
+                <div class="spa-user open-user-profile-btn" id="adminSidebarProfile" title="Xem & chỉnh sửa thông tin tài khoản" role="button" tabindex="0">
+                    <div class="spa-avatar" id="sidebarAdminAvatar" style="background: @userColor;">@userAvatar</div>
+                    <div class="spa-user-text">
+                        <strong id="sidebarAdminName">@(userName ?? "Quản trị viên")</strong>
+                        <small id="sidebarAdminRole">@(userRoleTitle ?? "Administrator")</small>
+                    </div>
+                    <span class="spa-user-edit-icon" title="Chỉnh sửa hồ sơ">✏️</span>
+                </div>
+                <button type="button" class="sidebar-logout-btn open-logout-btn" title="Đăng xuất khỏi hệ thống">
+                    ⎋ Đăng xuất
+                </button>
+            </div>
+        </aside>
+
+        <main class="spa-main">
+            <header class="spa-topbar">
+                <div>
+                    <strong id="topbarGreeting">Hệ thống quản lý LUNA SPA & AI Clinic</strong>
+                    <p id="topbarSubGreeting">Xin chào @(userName ?? "Quản trị viên")! Chúc bạn một ngày làm việc hiệu quả.</p>
+                </div>
+                <div class="spa-top-actions">
+                    <a asp-controller="Home" asp-action="Index" class="spa-top-public-link" title="Xem giao diện bên ngoài của khách hàng">
+                        🌐 Xem trang chủ
+                    </a>
+
+                    <a asp-controller="Reports" asp-action="Index" class="spa-top-public-link" style="background: #fdf2f8; color: #a76d8e; border-color: #fbcfe8;" title="Xem báo cáo doanh thu & vận hành">
+                        ▥ Báo cáo
+                    </a>
+
+                    <button type="button" class="spa-top-profile-btn open-user-profile-btn" id="openAdminProfileTopBtn" title="Xem & chỉnh sửa thông tin hồ sơ">
+                        <span class="spa-top-role-badge" id="topbarAdminRoleBadge">@(userRoleTitle ?? "Admin")</span>
+                        <span class="spa-top-name" id="topbarAdminName">@(userName ?? "Quản trị viên")</span>
+                        <div class="spa-top-avatar" id="topbarAdminAvatar" style="background: @userColor;">@userAvatar</div>
+                    </button>
+
+                    <button type="button" class="spa-top-logout-btn open-logout-btn" title="Đăng xuất tài khoản">
+                        ⎋ Đăng xuất
+                    </button>
+                </div>
+            </header>
+
+            <section class="spa-content">
+                @RenderBody()
+            </section>
+        </main>
+
+    </div>
+}
+
+    <!-- ========================================================================= -->
+    <!-- MODAL ĐĂNG NHẬP / ĐĂNG KÝ ĐA VAI TRÒ (KHÁCH HÀNG, NHÂN VIÊN, ADMIN) -->
+    <!-- ========================================================================= -->
+    <div class="customer-modal-backdrop" id="authModal" style="display:none;">
+        <div class="auth-dialog-card">
+            <!-- HEADER MODAL -->
+            <div class="auth-dialog-header">
+                <div class="auth-dialog-header-left">
+                    <div class="auth-brand-logo">✿</div>
+                    <div>
+                        <h2>LUNA SPA & AI CLINIC</h2>
+                        <p>Hệ thống định danh & xác thực thành viên</p>
+                    </div>
+                </div>
+                <button type="button" class="customer-modal-close" id="closeAuthModal" title="Đóng cửa sổ">×</button>
+            </div>
+
+            <!-- TABS CHUYỂN ĐỔI: ĐĂNG NHẬP vs ĐĂNG KÝ -->
+            <div class="auth-tabs">
+                <button type="button" class="auth-tab-btn active" id="tabBtnLogin" data-target="loginPanel">
+                    🔑 Đăng Nhập
+                </button>
+                <button type="button" class="auth-tab-btn" id="tabBtnRegister" data-target="registerPanel">
+                    ✦ Đăng Ký Mới
+                </button>
+            </div>
+
+            <div class="auth-panels-body">
+                <!-- NỘI DUNG PANEL 1: ĐĂNG NHẬP -->
+                <div class="auth-panel active" id="loginPanel">
+                    
+                    <!-- ⚡ KHỐI ĐĂNG NHẬP NHANH 1-CLICK: ĐẶT NGAY ĐẦU TIÊN CỰC KỲ NỔI BẬT & ĐẦY ĐỦ 4 VAI TRÒ -->
+                    <div class="quick-demo-accounts-top">
+                        <div class="quick-demo-badge-banner">
+                            <span class="badge-icon">⚡</span>
+                            <strong>ĐĂNG NHẬP NHANH 1-CLICK (4 VAI TRÒ):</strong>
+                        </div>
+                        
+                        <div class="quick-demo-cards-grid">
+                            <!-- 1. QUẢN TRỊ VIÊN -->
+                            <button type="button" class="quick-role-card role-card-admin btn-demo-quick" data-role="Admin" title="Đăng nhập tài khoản Quản trị viên tối cao">
+                                <span class="role-card-badge-icon" style="background: #fdf2f8; color: #a76d8e; border: 1px solid #fbcfe8;">🛡️</span>
+                                <div class="role-card-text">
+                                    <strong class="role-title">Quản Trị Viên</strong>
+                                    <span class="role-desc">admin@lunaspa.vn</span>
+                                </div>
+                                <span class="role-card-arrow">➜</span>
+                            </button>
+
+                            <!-- 2. BÁC SĨ -->
+                            <button type="button" class="quick-role-card role-card-doctor btn-demo-quick" data-role="Doctor" title="Đăng nhập tài khoản BS. CKI Lê Hoàng Yến">
+                                <span class="role-card-badge-icon" style="background: #f0f9ff; color: #0284c7; border: 1px solid #bae6fd;">🩺</span>
+                                <div class="role-card-text">
+                                    <strong class="role-title">Bác Sĩ Da Liễu</strong>
+                                    <span class="role-desc">bacsi.yen@lunaspa.vn</span>
+                                </div>
+                                <span class="role-card-arrow">➜</span>
+                            </button>
+
+                            <!-- 3. NHÂN VIÊN (KTV / LỄ TÂN) -->
+                            <button type="button" class="quick-role-card role-card-staff btn-demo-quick" data-role="Staff" title="Đăng nhập tài khoản KTV Trưởng Nguyễn Thu Trang">
+                                <span class="role-card-badge-icon" style="background: #f0fdfa; color: #0d9488; border: 1px solid #99f6e4;">💆</span>
+                                <div class="role-card-text">
+                                    <strong class="role-title">Nhân Viên (KTV)</strong>
+                                    <span class="role-desc">ktv.trang@lunaspa.vn</span>
+                                </div>
+                                <span class="role-card-arrow">➜</span>
+                            </button>
+
+                            <!-- 4. KHÁCH HÀNG (HỘI VIÊN VIP) -->
+                            <button type="button" class="quick-role-card role-card-customer btn-demo-quick" data-role="Customer" title="Đăng nhập tài khoản Khách VIP Nguyễn Thị Minh Anh">
+                                <span class="role-card-badge-icon" style="background: #fffbeb; color: #d97706; border: 1px solid #fde68a;">👤</span>
+                                <div class="role-card-text">
+                                    <strong class="role-title">Khách Hàng (VIP)</strong>
+                                    <span class="role-desc">khachhang@gmail.com</span>
+                                </div>
+                                <span class="role-card-arrow">➜</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="auth-divider-line">
+                        <span>HOẶC ĐĂNG NHẬP BẰNG TÀI KHOẢN</span>
+                    </div>
+
+                    <div class="role-selector-wrap">
+                        <span class="role-picker-label">Chọn vai trò đăng nhập:</span>
+                        <div class="role-pills" id="loginRolePills">
+                            <button type="button" class="role-pill active" data-role="Customer">👤 Khách hàng</button>
+                            <button type="button" class="role-pill" data-role="Staff">💆 Nhân viên</button>
+                            <button type="button" class="role-pill" data-role="Doctor">🩺 Bác sĩ</button>
+                            <button type="button" class="role-pill" data-role="Admin">🛡️ Quản trị viên</button>
+                        </div>
+                    </div>
+
+                    <form id="loginForm" class="auth-form-content">
+                        <div class="auth-form-group">
+                            <label>Địa chỉ Email đăng nhập *</label>
+                            <input type="email" id="loginEmail" class="portal-input" value="khachhang@gmail.com" placeholder="Ví dụ: khachhang@gmail.com" required />
+                        </div>
+
+                        <div class="auth-form-group">
+                            <label>Mật khẩu truy cập *</label>
+                            <div class="auth-input-password-wrap">
+                                <input type="password" id="loginPassword" class="portal-input" value="123456" placeholder="••••••••" required />
+                                <button type="button" class="btn-toggle-password" data-target="loginPassword" title="Hiển thị mật khẩu" tabindex="-1">
+                                    <span class="eye-icon">👁️</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="auth-remember-row">
+                            <label class="remember-label">
+                                <input type="checkbox" id="loginRememberMe" checked />
+                                <span>Ghi nhớ phiên đăng nhập</span>
+                            </label>
+                            <a href="javascript:void(0)" id="btnForgotPassHelp" style="color: #985c7e; font-size: 12px; text-decoration: none;">Quên mật khẩu?</a>
+                        </div>
+
+                        <button type="submit" class="portal-btn-primary" id="btnSubmitLogin" style="width: 100%; justify-content: center;">
+                            <span>✓</span> Đăng Nhập Hệ Thống
+                        </button>
+                    </form>
+                </div>
+
+                <!-- NỘI DUNG PANEL 2: ĐĂNG KÝ -->
+                <div class="auth-panel" id="registerPanel">
+                    <div class="role-selector-wrap">
+                        <span class="role-picker-label">Đăng ký tài khoản cho vai trò:</span>
+                        <div class="role-pills" id="registerRolePills">
+                            <button type="button" class="role-pill active" data-role="Customer">👤 Khách hàng</button>
+                            <button type="button" class="role-pill" data-role="Staff">💆 Nhân viên</button>
+                            <button type="button" class="role-pill" data-role="Doctor">🩺 Bác sĩ</button>
+                            <button type="button" class="role-pill" data-role="Admin">🛡️ Quản trị viên</button>
+                        </div>
+                    </div>
+
+                    <form id="registerForm" class="auth-form-content">
+                        <div class="auth-form-group">
+                            <label>Họ và tên đầy đủ *</label>
+                            <input type="text" id="regFullName" class="portal-input" placeholder="Ví dụ: Lê Minh Trí" required />
+                        </div>
+
+                        <div class="auth-form-row">
+                            <div class="auth-form-group">
+                                <label>Số điện thoại *</label>
+                                <input type="tel" id="regPhone" class="portal-input" placeholder="Ví dụ: 0912 345 678" required />
+                            </div>
+                            <div class="auth-form-group">
+                                <label>Địa chỉ Email *</label>
+                                <input type="email" id="regEmail" class="portal-input" placeholder="name@domain.com" required />
+                            </div>
+                        </div>
+
+                        <div class="auth-form-row">
+                            <div class="auth-form-group">
+                                <label>Mật khẩu (≥ 6 ký tự) *</label>
+                                <div class="auth-input-password-wrap">
+                                    <input type="password" id="regPassword" class="portal-input" placeholder="••••••••" required />
+                                    <button type="button" class="btn-toggle-password" data-target="regPassword" title="Hiển thị mật khẩu" tabindex="-1">
+                                        <span class="eye-icon">👁️</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="auth-form-group">
+                                <label>Xác nhận lại mật khẩu *</label>
+                                <div class="auth-input-password-wrap">
+                                    <input type="password" id="regConfirmPassword" class="portal-input" placeholder="••••••••" required />
+                                    <button type="button" class="btn-toggle-password" data-target="regConfirmPassword" title="Hiển thị mật khẩu" tabindex="-1">
+                                        <span class="eye-icon">👁️</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TRƯỜNG DÀNH RIÊNG CHO NHÂN VIÊN & BÁC SĨ -->
+                        <div class="auth-form-group" id="groupRegSpecialty" style="display: none;">
+                            <label>Chuyên môn / Vị trí đảm nhận:</label>
+                            <select id="regSpecialty" class="portal-select">
+                                <option value="Bác sĩ Da liễu & Laser Thẩm mỹ">Bác sĩ Da liễu & Laser Thẩm mỹ</option>
+                                <option value="Kỹ thuật viên Trị liệu Spa">Kỹ thuật viên Trị liệu Spa</option>
+                                <option value="Chuyên viên Tư vấn Làn da AI">Chuyên viên Tư vấn Làn da AI</option>
+                                <option value="Lễ tân & Chăm sóc khách hàng VIP">Lễ tân & Chăm sóc khách hàng VIP</option>
+                            </select>
+                        </div>
+
+                        <!-- TRƯỜNG DÀNH RIÊNG CHO ADMIN -->
+                        <div class="auth-form-group" id="groupRegAdminCode" style="display: none;">
+                            <label>Mã bảo mật Quản trị viên (Admin Passcode) *</label>
+                            <input type="text" id="regAdminCode" class="portal-input" placeholder="Nhập mã bảo mật (Mặc định: LUNASPA2026)" />
+                            <small style="color: #985c7e; font-size: 11px;">* Chỉ cấp cho ban lãnh đạo. Mã mặc định thử nghiệm: <strong>LUNASPA2026</strong></small>
+                        </div>
+
+                        <!-- TRƯỜNG DÀNH RIÊNG CHO KHÁCH HÀNG -->
+                        <div class="auth-form-group" id="groupRegConcern">
+                            <label>Vấn đề làn da bạn quan tâm nhất:</label>
+                            <select id="regSkinConcern" class="portal-select">
+                                <option value="Trẻ hóa da & Xóa nếp nhăn">Trẻ hóa da & Xóa nếp nhăn</option>
+                                <option value="Trị nám, tàn nhang công nghệ cao">Trị nám, tàn nhang công nghệ cao</option>
+                                <option value="Kiểm soát dầu mụn & Thanh lọc da">Kiểm soát dầu mụn & Thanh lọc da</option>
+                                <option value="Dưỡng trắng da căng bóng ngậm nước">Dưỡng trắng da căng bóng ngậm nước</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="portal-btn-primary" id="btnSubmitRegister" style="width: 100%; justify-content: center;">
+                            <span>✦</span> Đăng Ký Tài Khoản Ngay
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MODAL CHỈNH SỬA HỒ SƠ CÁ NHÂN (ADMIN, NHÂN VIÊN, KHÁCH HÀNG) -->
+    <!-- ========================================================================= -->
+    <div class="customer-modal-backdrop" id="userProfileModal" style="display:none;">
+        <div class="customer-modal user-profile-dialog-card">
+            <!-- Header Hồ sơ -->
+            <div class="prof-header-card">
+                <div class="prof-avatar-big" id="profAvatarPreview" style="background: @userColor;">@userAvatar</div>
+                <div class="prof-header-info">
+                    <span class="prof-role-badge-pill" id="profRoleBadgePill">✦ @userRoleTitle</span>
+                    <h3 id="profHeaderName">@(userName ?? "Hồ sơ cá nhân")</h3>
+                    <span class="prof-header-email" id="profHeaderEmail">@(userEmail ?? "user@lunaspa.vn")</span>
+                </div>
+                <button type="button" class="customer-modal-close" id="closeUserProfileModal">×</button>
+            </div>
+
+            <!-- Thân Modal -->
+            <div class="prof-body-content">
+                <form id="userProfileForm" class="auth-form-content">
+                    <!-- Chọn màu sắc thương hiệu Avatar -->
+                    <div class="prof-color-section">
+                        <span class="prof-color-label">🎨 Màu đại diện hồ sơ:</span>
+                        <div class="prof-color-pills" id="profColorPills">
+                            <div class="prof-color-dot active" data-color="#a76d8e" style="background: #a76d8e;" title="Hồng Luna"></div>
+                            <div class="prof-color-dot" data-color="#2b7bb9" style="background: #2b7bb9;" title="Xanh Sapphire"></div>
+                            <div class="prof-color-dot" data-color="#3da58a" style="background: #3da58a;" title="Xanh Ngọc Bích"></div>
+                            <div class="prof-color-dot" data-color="#d48806" style="background: #d48806;" title="Vàng Kim VIP"></div>
+                            <div class="prof-color-dot" data-color="#7c3aed" style="background: #7c3aed;" title="Tím Hoàng Gia"></div>
+                            <div class="prof-color-dot" data-color="#0f766e" style="background: #0f766e;" title="Xanh Teal Sang Trọng"></div>
+                        </div>
+                        <input type="hidden" id="profSelectedColor" value="@userColor" />
+                    </div>
+
+                    <div class="auth-form-row">
+                        <div class="auth-form-group">
+                            <label>Họ và tên *</label>
+                            <input type="text" id="profFullName" class="portal-input" value="@userName" required />
+                        </div>
+                        <div class="auth-form-group">
+                            <label>Số điện thoại *</label>
+                            <input type="tel" id="profPhone" class="portal-input" placeholder="09xx xxx xxx" required />
+                        </div>
+                    </div>
+
+                    <div class="auth-form-row">
+                        <div class="auth-form-group">
+                            <label>Địa chỉ Email (Định danh đăng nhập)</label>
+                            <input type="email" id="profEmail" class="portal-input" value="@userEmail" readonly style="background: #f8f6f8; cursor: not-allowed;" />
+                        </div>
+                        <div class="auth-form-group" id="groupProfRoleTitle">
+                            <label>Chức danh / Nhóm vai trò</label>
+                            <input type="text" id="profRoleTitle" class="portal-input" value="@userRoleTitle" />
+                        </div>
+                    </div>
+
+                    <!-- Trường chuyên môn dành cho Nhân viên & Admin -->
+                    <div class="auth-form-group" id="groupProfSpecialty" style="display: none;">
+                        <label>Chuyên môn / Vị trí phụ trách:</label>
+                        <input type="text" id="profSpecialty" class="portal-input" placeholder="Ví dụ: Bác sĩ Chuyên khoa Da liễu, Laser Pico, Trẻ hóa Hifu..." />
+                    </div>
+
+                    <!-- Trường dành cho Khách hàng -->
+                    <div class="auth-form-group" id="groupProfSkinConcern" style="display: none;">
+                        <label>Tình trạng làn da & Mối quan tâm làm đẹp:</label>
+                        <select id="profSkinConcern" class="portal-select">
+                            <option value="Trẻ hóa da & Xóa nếp nhăn">Trẻ hóa da & Xóa nếp nhăn</option>
+                            <option value="Trị nám, tàn nhang công nghệ cao">Trị nám, tàn nhang công nghệ cao</option>
+                            <option value="Kiểm soát dầu mụn & Thanh lọc da">Kiểm soát dầu mụn & Thanh lọc da</option>
+                            <option value="Dưỡng trắng da căng bóng ngậm nước">Dưỡng trắng da căng bóng ngậm nước</option>
+                            <option value="Phục hồi da mỏng yếu nhạy cảm">Phục hồi da mỏng yếu nhạy cảm</option>
+                        </select>
+                    </div>
+
+                    <!-- Khối Đổi mật khẩu tài khoản -->
+                    <div class="prof-password-box">
+                        <div class="prof-password-title">
+                            <span>🔐</span> Đổi mật khẩu đăng nhập (Để trống nếu giữ nguyên)
+                        </div>
+
+                        <div class="auth-form-group" style="margin-bottom: 10px;">
+                            <label>Mật khẩu hiện tại</label>
+                            <div class="auth-input-password-wrap">
+                                <input type="password" id="profCurrentPassword" class="portal-input" placeholder="Nhập mật khẩu hiện tại..." />
+                                <button type="button" class="btn-toggle-password" data-target="profCurrentPassword" title="Hiển thị mật khẩu" tabindex="-1">
+                                    <span class="eye-icon">👁️</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="auth-form-row">
+                            <div class="auth-form-group">
+                                <label>Mật khẩu mới (tối thiểu 6 ký tự)</label>
+                                <div class="auth-input-password-wrap">
+                                    <input type="password" id="profNewPassword" class="portal-input" placeholder="Mật khẩu mới..." />
+                                    <button type="button" class="btn-toggle-password" data-target="profNewPassword" title="Hiển thị mật khẩu" tabindex="-1">
+                                        <span class="eye-icon">👁️</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="auth-form-group">
+                                <label>Xác nhận mật khẩu mới</label>
+                                <div class="auth-input-password-wrap">
+                                    <input type="password" id="profConfirmNewPassword" class="portal-input" placeholder="Xác nhận lại..." />
+                                    <button type="button" class="btn-toggle-password" data-target="profConfirmNewPassword" title="Hiển thị mật khẩu" tabindex="-1">
+                                        <span class="eye-icon">👁️</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Nút thao tác -->
+                    <div style="display: flex; gap: 12px; margin-top: 14px; justify-content: flex-end;">
+                        <button type="button" class="customer-secondary-btn" id="btnCancelProfile">Đóng</button>
+                        <button type="submit" class="portal-btn-primary" id="btnSaveUserProfile" style="padding: 10px 24px;">
+                            <span>💾</span> Lưu Thay Đổi Hồ Sơ
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MODAL XÁC NHẬN ĐĂNG XUẤT -->
+    <!-- ========================================================================= -->
+    <div class="customer-modal-backdrop" id="logoutConfirmModal" style="display:none;">
+        <div class="customer-modal" style="max-width: 440px;">
+            <div class="customer-modal-header" style="background: #fdf5f9;">
+                <div>
+                    <h3 style="color: #985c7e; margin: 0; font-size: 18px;">Xác nhận Đăng xuất</h3>
+                    <p style="margin: 4px 0 0; color: #7a6e84; font-size: 13px;">Bạn có chắc chắn muốn đăng xuất khỏi phiên làm việc này?</p>
+                </div>
+                <button type="button" class="customer-modal-close" id="closeLogoutConfirmModal">×</button>
+            </div>
+            <div style="padding: 20px 24px;">
+                <p style="margin: 0; color: #514261; font-size: 14px; line-height: 1.5;">
+                    Sau khi đăng xuất, hệ thống sẽ đưa bạn trở về Trang chủ công khai và xóa thông tin phiên đăng nhập hiện tại.
+                </p>
+            </div>
+            <div class="customer-modal-footer">
+                <button type="button" class="customer-secondary-btn" id="btnCancelLogout">Hủy bỏ</button>
+                <button type="button" class="customer-primary-btn" id="btnConfirmLogout" style="background: #c53030;">
+                    ⎋ Xác nhận Đăng xuất
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST THÔNG BÁO TOÀN HỆ THỐNG -->
+    <div class="luna-toast" id="lunaGlobalToast">
+        <span id="lunaToastIcon">✓</span>
+        <span id="lunaToastMessage">Thao tác thành công!</span>
+    </div>
+
+    <!-- JAVASCRIPT XÁC THỰC & ĐIỀU KHIỂN TOÀN CỤC -->
+    <script>
+        // Hàm hiển thị Toast toàn hệ thống
+        window.showLunaToast = function (message, type = 'success') {
+            const toast = document.getElementById("lunaGlobalToast");
+            const msgEl = document.getElementById("lunaToastMessage");
+            const iconEl = document.getElementById("lunaToastIcon");
+            if (!toast) return;
+
+            msgEl.textContent = message;
+            if (type === 'error') {
+                toast.style.background = '#821a1a';
+                iconEl.textContent = '✕';
+            } else {
+                toast.style.background = '#30243d';
+                iconEl.textContent = '✓';
+            }
+
+            toast.classList.add("show");
+            setTimeout(() => {
+                toast.classList.remove("show");
+            }, 3500);
+        };
+
+        document.addEventListener("DOMContentLoaded", function () {
+            // ==========================================
+            // QUẢN LÝ MODAL AUTH (LOGIN / REGISTER)
+            // ==========================================
+            const authModal = document.getElementById("authModal");
+            const closeAuthBtn = document.getElementById("closeAuthModal");
+            const tabBtnLogin = document.getElementById("tabBtnLogin");
+            const tabBtnRegister = document.getElementById("tabBtnRegister");
+            const loginPanel = document.getElementById("loginPanel");
+            const registerPanel = document.getElementById("registerPanel");
+
+            let currentLoginRole = "Customer";
+            let currentRegisterRole = "Customer";
+
+            // Mở modal Auth
+            document.querySelectorAll(".open-auth-modal-btn").forEach(btn => {
+                btn.addEventListener("click", function () {
+                    const mode = this.getAttribute("data-mode") || "login";
+                    const role = this.getAttribute("data-role") || "Customer";
+
+                    if (mode === "register") {
+                        switchTab("register");
+                        setRegisterRole(role);
+                    } else {
+                        switchTab("login");
+                        setLoginRole(role);
+                    }
+
+                    authModal.style.display = "flex";
+                });
+            });
+
+            function closeAuth() {
+                authModal.style.display = "none";
+            }
+
+            if (closeAuthBtn) closeAuthBtn.addEventListener("click", closeAuth);
+            authModal.addEventListener("click", function (e) {
+                if (e.target === authModal) closeAuth();
+            });
+
+            // Chuyển tab Đăng nhập / Đăng ký
+            function switchTab(tab) {
+                if (tab === "register") {
+                    tabBtnRegister.classList.add("active");
+                    tabBtnLogin.classList.remove("active");
+                    registerPanel.classList.add("active");
+                    loginPanel.classList.remove("active");
+                } else {
+                    tabBtnLogin.classList.add("active");
+                    tabBtnRegister.classList.remove("active");
+                    loginPanel.classList.add("active");
+                    registerPanel.classList.remove("active");
+                }
+            }
+
+            tabBtnLogin?.addEventListener("click", () => switchTab("login"));
+            tabBtnRegister?.addEventListener("click", () => switchTab("register"));
+
+            // Chọn vai trò Đăng nhập
+            const loginPills = document.querySelectorAll("#loginRolePills .role-pill");
+            function setLoginRole(role) {
+                currentLoginRole = role;
+                loginPills.forEach(p => {
+                    if (p.getAttribute("data-role") === role) p.classList.add("active");
+                    else p.classList.remove("active");
+                });
+
+                const emailInput = document.getElementById("loginEmail");
+                const passInput = document.getElementById("loginPassword");
+                if (role === "Admin") {
+                    emailInput.placeholder = "Ví dụ: admin@lunaspa.vn";
+                    emailInput.value = "admin@lunaspa.vn";
+                } else if (role === "Doctor") {
+                    emailInput.placeholder = "Ví dụ: bacsi.yen@lunaspa.vn";
+                    emailInput.value = "bacsi.yen@lunaspa.vn";
+                } else if (role === "Staff") {
+                    emailInput.placeholder = "Ví dụ: ktv.trang@lunaspa.vn";
+                    emailInput.value = "ktv.trang@lunaspa.vn";
+                } else {
+                    emailInput.placeholder = "Ví dụ: khachhang@gmail.com";
+                    emailInput.value = "khachhang@gmail.com";
+                }
+                if (passInput) passInput.value = "123456";
+            }
+
+            loginPills.forEach(pill => {
+                pill.addEventListener("click", function () {
+                    setLoginRole(this.getAttribute("data-role"));
+                });
+            });
+
+            // Chọn vai trò Đăng ký
+            const regPills = document.querySelectorAll("#registerRolePills .role-pill");
+            const groupSpecialty = document.getElementById("groupRegSpecialty");
+            const groupAdminCode = document.getElementById("groupRegAdminCode");
+            const groupConcern = document.getElementById("groupRegConcern");
+
+            function setRegisterRole(role) {
+                currentRegisterRole = role;
+                regPills.forEach(p => {
+                    if (p.getAttribute("data-role") === role) p.classList.add("active");
+                    else p.classList.remove("active");
+                });
+
+                if (role === "Admin") {
+                    groupAdminCode.style.display = "block";
+                    groupSpecialty.style.display = "none";
+                    groupConcern.style.display = "none";
+                } else if (role === "Doctor" || role === "Staff") {
+                    groupSpecialty.style.display = "block";
+                    groupAdminCode.style.display = "none";
+                    groupConcern.style.display = "none";
+                } else {
+                    groupConcern.style.display = "block";
+                    groupSpecialty.style.display = "none";
+                    groupAdminCode.style.display = "none";
+                }
+            }
+
+            regPills.forEach(pill => {
+                pill.addEventListener("click", function () {
+                    setRegisterRole(this.getAttribute("data-role"));
+                });
+            });
+
+            // ==========================================
+            // SUBMIT ĐĂNG NHẬP
+            // ==========================================
+            document.getElementById("loginForm")?.addEventListener("submit", async function (e) {
+                e.preventDefault();
+                const email = document.getElementById("loginEmail").value.trim();
+                const password = document.getElementById("loginPassword").value;
+                const rememberMe = document.getElementById("loginRememberMe").checked;
+                const btn = document.getElementById("btnSubmitLogin");
+
+                btn.innerHTML = `<span>⏳</span> Đang xác thực...`;
+                btn.disabled = true;
+
+                try {
+                    const resp = await fetch("/Account/Login", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            Email: email,
+                            Password: password,
+                            Role: currentLoginRole,
+                            RememberMe: rememberMe
+                        })
+                    });
+
+                    const data = await resp.json();
+                    if (data.success) {
+                        window.showLunaToast(data.message, "success");
+                        closeAuth();
+                        setTimeout(() => {
+                            window.location.href = data.redirectUrl || "/";
+                        }, 700);
+                    } else {
+                        alert(data.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin!");
+                    }
+                } catch (err) {
+                    console.error("Login error:", err);
+                    alert("Lỗi kết nối máy chủ. Vui lòng thử lại!");
+                } finally {
+                    btn.innerHTML = `<span>✓</span> Đăng Nhập Hệ Thống`;
+                    btn.disabled = false;
+                }
+            });
+
+            // ==========================================
+            // SUBMIT ĐĂNG KÝ
+            // ==========================================
+            document.getElementById("registerForm")?.addEventListener("submit", async function (e) {
+                e.preventDefault();
+                const fullName = document.getElementById("regFullName").value.trim();
+                const phone = document.getElementById("regPhone").value.trim();
+                const email = document.getElementById("regEmail").value.trim();
+                const password = document.getElementById("regPassword").value;
+                const confirmPass = document.getElementById("regConfirmPassword").value;
+                const specialty = document.getElementById("regSpecialty")?.value || "";
+                const adminCode = document.getElementById("regAdminCode")?.value.trim() || "";
+                const concern = document.getElementById("regSkinConcern")?.value || "";
+                const btn = document.getElementById("btnSubmitRegister");
+
+                if (password !== confirmPass) {
+                    alert("Mật khẩu xác nhận không khớp!");
+                    return;
+                }
+
+                btn.innerHTML = `<span>⏳</span> Đang tạo tài khoản...`;
+                btn.disabled = true;
+
+                try {
+                    const resp = await fetch("/Account/Register", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            FullName: fullName,
+                            Phone: phone,
+                            Email: email,
+                            Password: password,
+                            ConfirmPassword: confirmPass,
+                            Role: currentRegisterRole,
+                            Specialty: specialty,
+                            AdminAccessCode: adminCode,
+                            SkinConcern: concern
+                        })
+                    });
+
+                    const data = await resp.json();
+                    if (data.success) {
+                        window.showLunaToast(data.message, "success");
+                        closeAuth();
+                        setTimeout(() => {
+                            window.location.href = data.redirectUrl || "/";
+                        }, 800);
+                    } else {
+                        alert(data.message || "Đăng ký không thành công!");
+                    }
+                } catch (err) {
+                    console.error("Register error:", err);
+                    alert("Lỗi kết nối máy chủ. Vui lòng thử lại!");
+                } finally {
+                    btn.innerHTML = `<span>✦</span> Đăng Ký Tài Khoản Ngay`;
+                    btn.disabled = false;
+                }
+            });
+
+            // ==========================================
+            // ĐĂNG NHẬP NHANH 1-CLICK DEMO (4 VAI TRÒ)
+            // ==========================================
+            document.querySelectorAll(".btn-demo-quick").forEach(btn => {
+                btn.addEventListener("click", async function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const role = this.getAttribute("data-role") || "Customer";
+                    const prevHtml = this.innerHTML;
+                    this.innerHTML = `<span>⏳</span> Đang nạp...`;
+
+                    try {
+                        const resp = await fetch("/Account/QuickLogin", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ Role: role })
+                        });
+                        const data = await resp.json();
+                        if (data && data.success) {
+                            window.showLunaToast(data.message, "success");
+                            closeAuth();
+                            setTimeout(() => {
+                                window.location.href = data.redirectUrl || "/";
+                            }, 400);
+                        } else {
+                            window.location.href = "/Account/QuickLoginDirect?role=" + encodeURIComponent(role);
+                        }
+                    } catch (err) {
+                        console.error("Quick login error:", err);
+                        window.location.href = "/Account/QuickLoginDirect?role=" + encodeURIComponent(role);
+                    }
+                });
+            });
+
+            // ==========================================
+            // XỬ LÝ ĐĂNG XUẤT (LOGOUT)
+            // ==========================================
+            const logoutModal = document.getElementById("logoutConfirmModal");
+            const closeLogoutBtn = document.getElementById("closeLogoutConfirmModal");
+            const cancelLogoutBtn = document.getElementById("btnCancelLogout");
+            const confirmLogoutBtn = document.getElementById("btnConfirmLogout");
+
+            document.querySelectorAll(".open-logout-btn").forEach(btn => {
+                btn.addEventListener("click", function () {
+                    logoutModal.style.display = "grid";
+                });
+            });
+
+            function closeLogout() {
+                logoutModal.style.display = "none";
+            }
+
+            if (closeLogoutBtn) closeLogoutBtn.addEventListener("click", closeLogout);
+            if (cancelLogoutBtn) cancelLogoutBtn.addEventListener("click", closeLogout);
+            logoutModal.addEventListener("click", function (e) {
+                if (e.target === logoutModal) closeLogout();
+            });
+
+            if (confirmLogoutBtn) {
+                confirmLogoutBtn.addEventListener("click", async function () {
+                    this.innerHTML = "<span>⏳</span> Đang đăng xuất...";
+                    try {
+                        const resp = await fetch("/Account/Logout", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" }
+                        });
+                        const data = await resp.json();
+                        window.showLunaToast("✓ Đã đăng xuất thành công khỏi hệ thống!", "success");
+                        setTimeout(() => {
+                            window.location.href = "/";
+                        }, 500);
+                    } catch (err) {
+                        window.location.href = "/Account/Logout";
+                    }
+                });
+            }
+
+            // Trợ giúp quên mật khẩu
+            document.getElementById("btnForgotPassHelp")?.addEventListener("click", function () {
+                alert("✦ HƯỚNG DẪN TRUY CẬP 4 VAI TRÒ HỆ THỐNG:\n\n1. Quản trị viên (Admin): admin@lunaspa.vn\n2. Bác sĩ Da liễu: bacsi.yen@lunaspa.vn\n3. Nhân viên (KTV): ktv.trang@lunaspa.vn\n4. Khách hàng (VIP): khachhang@gmail.com\n\n• Mật khẩu demo chung: 123456\n• Hoặc bạn chỉ cần bấm vào nút 'Đăng nhập nhanh 1-Click' ở khung trên để vào thẳng hệ thống!");
+            });
+
+            // ==========================================
+            // BẬT / TẮT MẮT XEM MẬT KHẨU (PASSWORD EYE TOGGLE)
+            // ==========================================
+            document.addEventListener("click", function (e) {
+                const btn = e.target.closest(".btn-toggle-password");
+                if (!btn) return;
+                e.preventDefault();
+                const targetId = btn.getAttribute("data-target");
+                const input = document.getElementById(targetId);
+                if (!input) return;
+
+                const icon = btn.querySelector(".eye-icon") || btn;
+                if (input.type === "password") {
+                    input.type = "text";
+                    icon.textContent = "🙈";
+                    btn.setAttribute("title", "Ẩn mật khẩu");
+                } else {
+                    input.type = "password";
+                    icon.textContent = "👁️";
+                    btn.setAttribute("title", "Hiển thị mật khẩu");
+                }
+            });
+
+            // ==========================================
+            // QUẢN LÝ CHỈNH SỬA HỒ SƠ CÁ NHÂN (ADMIN, NHÂN VIÊN, KHÁCH HÀNG)
+            // ==========================================
+            const profileModal = document.getElementById("userProfileModal");
+            const closeProfileBtn = document.getElementById("closeUserProfileModal");
+            const cancelProfileBtn = document.getElementById("btnCancelProfile");
+            const profileForm = document.getElementById("userProfileForm");
+
+            function closeUserProfile() {
+                if (profileModal) profileModal.style.display = "none";
+            }
+
+            if (closeProfileBtn) closeProfileBtn.addEventListener("click", closeUserProfile);
+            if (cancelProfileBtn) cancelProfileBtn.addEventListener("click", closeUserProfile);
+            if (profileModal) {
+                profileModal.addEventListener("click", function (e) {
+                    if (e.target === profileModal) closeUserProfile();
+                });
+            }
+
+            // Chọn màu đại diện Avatar
+            document.querySelectorAll(".prof-color-dot").forEach(dot => {
+                dot.addEventListener("click", function () {
+                    document.querySelectorAll(".prof-color-dot").forEach(d => d.classList.remove("active"));
+                    this.classList.add("active");
+                    const color = this.getAttribute("data-color");
+                    document.getElementById("profSelectedColor").value = color;
+                    const preview = document.getElementById("profAvatarPreview");
+                    if (preview) preview.style.background = color;
+                });
+            });
+
+            // Mở modal hồ sơ
+            document.querySelectorAll(".open-user-profile-btn").forEach(btn => {
+                btn.addEventListener("click", async function (e) {
+                    e.preventDefault();
+                    try {
+                        const resp = await fetch("/Account/GetProfile");
+                        const data = await resp.json();
+                        if (data.success && data.user) {
+                            const u = data.user;
+                            document.getElementById("profHeaderName").textContent = u.fullName;
+                            document.getElementById("profHeaderEmail").textContent = u.email;
+                            document.getElementById("profRoleBadgePill").textContent = "✦ " + u.roleTitle;
+                            document.getElementById("profAvatarPreview").textContent = u.avatarInitials;
+                            document.getElementById("profAvatarPreview").style.background = u.avatarColor || "#a76d8e";
+                            document.getElementById("profSelectedColor").value = u.avatarColor || "#a76d8e";
+
+                            // Kích hoạt dot màu tương ứng
+                            document.querySelectorAll(".prof-color-dot").forEach(d => {
+                                if (d.getAttribute("data-color").toLowerCase() === (u.avatarColor || "").toLowerCase()) {
+                                    d.classList.add("active");
+                                } else {
+                                    d.classList.remove("active");
+                                }
+                            });
+
+                            document.getElementById("profFullName").value = u.fullName || "";
+                            document.getElementById("profPhone").value = u.phone || "";
+                            document.getElementById("profEmail").value = u.email || "";
+                            document.getElementById("profRoleTitle").value = u.roleTitle || "";
+
+                            const grpSpecialty = document.getElementById("groupProfSpecialty");
+                            const grpSkinConcern = document.getElementById("groupProfSkinConcern");
+                            const inputSpecialty = document.getElementById("profSpecialty");
+                            const selectSkinConcern = document.getElementById("profSkinConcern");
+
+                            if (u.role === "Admin" || u.role === "Staff") {
+                                if (grpSpecialty) grpSpecialty.style.display = "block";
+                                if (grpSkinConcern) grpSkinConcern.style.display = "none";
+                                if (inputSpecialty) inputSpecialty.value = u.specialty || "";
+                            } else {
+                                if (grpSpecialty) grpSpecialty.style.display = "none";
+                                if (grpSkinConcern) grpSkinConcern.style.display = "block";
+                                if (selectSkinConcern && u.skinConcern) {
+                                    selectSkinConcern.value = u.skinConcern;
+                                }
+                            }
+
+                            // Xóa trắng ô mật khẩu
+                            document.getElementById("profCurrentPassword").value = "";
+                            document.getElementById("profNewPassword").value = "";
+                            document.getElementById("profConfirmNewPassword").value = "";
+
+                            profileModal.style.display = "flex";
+                        } else {
+                            window.showLunaToast("Vui lòng đăng nhập để xem và sửa hồ sơ cá nhân!", "warning");
+                            document.getElementById("authModal").style.display = "flex";
+                        }
+                    } catch (err) {
+                        console.error("Lỗi lấy thông tin hồ sơ:", err);
+                    }
+                });
+            });
+
+            // Submit cập nhật hồ sơ
+            if (profileForm) {
+                profileForm.addEventListener("submit", async function (e) {
+                    e.preventDefault();
+                    const submitBtn = document.getElementById("btnSaveUserProfile");
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = "<span>⏳</span> Đang lưu...";
+
+                    const payload = {
+                        FullName: document.getElementById("profFullName").value.trim(),
+                        Phone: document.getElementById("profPhone").value.trim(),
+                        RoleTitle: document.getElementById("profRoleTitle")?.value.trim(),
+                        Specialty: document.getElementById("profSpecialty")?.value.trim(),
+                        SkinConcern: document.getElementById("profSkinConcern")?.value,
+                        AvatarColor: document.getElementById("profSelectedColor").value,
+                        CurrentPassword: document.getElementById("profCurrentPassword").value,
+                        NewPassword: document.getElementById("profNewPassword").value,
+                        ConfirmNewPassword: document.getElementById("profConfirmNewPassword").value
+                    };
+
+                    try {
+                        const resp = await fetch("/Account/UpdateProfile", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(payload)
+                        });
+                        const data = await resp.json();
+
+                        if (data.success) {
+                            window.showLunaToast("✓ Cập nhật hồ sơ cá nhân thành công!", "success");
+                            closeUserProfile();
+
+                            // Cập nhật ngay các avatar, tên hiển thị trên giao diện
+                            const u = data.user;
+                            const portalName = document.getElementById("portalUserName");
+                            if (portalName) portalName.innerHTML = u.fullName + ' <span style="font-size: 11px; opacity: 0.7;">✏️</span>';
+                            const portalAvatar = document.getElementById("portalUserAvatar");
+                            if (portalAvatar) {
+                                portalAvatar.textContent = u.avatarInitials;
+                                portalAvatar.style.background = u.avatarColor;
+                            }
+                            const portalRole = document.getElementById("portalUserRole");
+                            if (portalRole) portalRole.textContent = u.roleTitle;
+
+                            const sideName = document.getElementById("sidebarAdminName");
+                            if (sideName) sideName.textContent = u.fullName;
+                            const sideRole = document.getElementById("sidebarAdminRole");
+                            if (sideRole) sideRole.textContent = u.roleTitle;
+                            const sideAvatar = document.getElementById("sidebarAdminAvatar");
+                            if (sideAvatar) {
+                                sideAvatar.textContent = u.avatarInitials;
+                                sideAvatar.style.background = u.avatarColor;
+                            }
+
+                            const topName = document.getElementById("topbarAdminName");
+                            if (topName) topName.textContent = u.fullName;
+                            const topRole = document.getElementById("topbarAdminRoleBadge");
+                            if (topRole) topRole.textContent = u.roleTitle;
+                            const topAvatar = document.getElementById("topbarAdminAvatar");
+                            if (topAvatar) {
+                                topAvatar.textContent = u.avatarInitials;
+                                topAvatar.style.background = u.avatarColor;
+                            }
+                        } else {
+                            window.showLunaToast(data.message || "Không thể cập nhật hồ sơ. Vui lòng kiểm tra lại!", "error");
+                        }
+                    } catch (err) {
+                        console.error("Lỗi cập nhật hồ sơ:", err);
+                        window.showLunaToast("Đã xảy ra lỗi khi lưu hồ sơ!", "error");
+                    } finally {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = "<span>💾</span> Lưu Thay Đổi Hồ Sơ";
+                    }
+                });
+            }
+        });
+    </script>
+
+    <!-- FLOATING GLOBAL AI CHAT BOX WIDGET (LUNA AI) -->
+    <div class="luna-chat-widget" id="lunaChatWidget">
+        <div class="luna-chat-tooltip" id="lunaChatTooltip">
+            <span>✨</span>
+            <span>Hỏi <strong>Luna AI</strong> về phác đồ da, lịch hẹn & dịch vụ!</span>
+        </div>
+
+        <div class="luna-chat-popover collapsed" id="lunaChatPopover">
+            <div class="luna-popover-header">
+                <div class="luna-popover-info">
+                    <div class="luna-popover-avatar">✿</div>
+                    <div class="luna-popover-title">
+                        <strong>Trợ Lý AI Luna Spa</strong>
+                        <span>Đang trực tuyến • Sẵn sàng hỗ trợ</span>
+                    </div>
+                </div>
+                <div class="luna-popover-controls">
+                    <button type="button" class="luna-popover-btn" id="lunaChatMinimizeBtn" title="Thu nhỏ">−</button>
+                    <button type="button" class="luna-popover-btn" id="lunaChatCloseBtn" title="Đóng">×</button>
+                </div>
+            </div>
+
+            <!-- Dòng tin nhắn trò chuyện -->
+            <div class="luna-popover-body" id="lunaGlobalChatBody">
+                <div class="luna-msg-wrap ai">
+                    <div class="luna-bubble-ai">
+                        Xin chào quý khách! Mình là <strong>Trợ lý Trí tuệ Nhân tạo Luna AI</strong>.
+                        <br /><br />
+                        Mình có thể hỗ trợ và tư vấn <strong>toàn bộ</strong> thông tin về hệ thống:
+                        <ul style="margin: 4px 0 0; padding-left: 16px; font-size: 11.5px; line-height: 1.5;">
+                            <li>Bảng giá & phác đồ điều trị da liễu</li>
+                            <li>Tạo lịch hẹn & kiểm soát phòng trống</li>
+                            <li>Thẻ hội viên VIP & chính sách tích điểm</li>
+                            <li>Tồn kho dược mỹ phẩm & nhập hàng</li>
+                            <li>Thu ngân, hóa đơn & báo cáo doanh thu</li>
+                        </ul>
+                    </div>
+                    <span class="luna-msg-time">Vừa xong</span>
+                </div>
+            </div>
+
+            <!-- Gợi ý câu hỏi nhanh (Quick Chips) -->
+            <div class="luna-popover-chips" id="lunaGlobalChips">
+                <button type="button" class="luna-mini-chip" data-q="Bảng giá các dịch vụ niêm yết tại Spa?">💰 Bảng giá Spa</button>
+                <button type="button" class="luna-mini-chip" data-q="Cách đặt lịch hẹn trị liệu nhanh?">📅 Đặt lịch hẹn</button>
+                <button type="button" class="luna-mini-chip" data-q="Laser Pico Pro có đau rát không?">✧ Laser Pico</button>
+                <button type="button" class="luna-mini-chip" data-q="Chính sách nâng hạng hội viên VIP?">👑 Thẻ VIP</button>
+                <button type="button" class="luna-mini-chip" data-q="Báo cáo doanh thu tháng này thế nào?">📊 Doanh thu</button>
+                <button type="button" class="luna-mini-chip" data-q="Chăm sóc da sau liệu trình thế nào?">🧴 Lời dặn sau làm</button>
+            </div>
+
+            <!-- Thanh nhập tin nhắn -->
+            <form id="lunaGlobalChatForm" class="luna-popover-inputbar">
+                <div class="luna-popover-inputbox">
+                    <input type="text" id="lunaGlobalChatInput" placeholder="Hỏi bất kỳ điều gì về Luna Spa..." autocomplete="off" />
+                </div>
+                <button type="submit" class="luna-popover-send" title="Gửi câu hỏi">➤</button>
+            </form>
+        </div>
+
+        <!-- Nút tròn nổi kích hoạt -->
+        <button type="button" class="luna-chat-trigger" id="lunaChatTrigger" title="Trò chuyện với Trợ lý AI Luna Spa">
+            ✿
+            <span class="luna-chat-badge" id="lunaChatBadge">1</span>
+        </button>
+    </div>
+
+    <!-- JAVASCRIPT ĐIỀU KHIỂN CHAT BOX AI NỔI TOÀN CỤC -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const trigger = document.getElementById("lunaChatTrigger");
+            const popover = document.getElementById("lunaChatPopover");
+            const tooltip = document.getElementById("lunaChatTooltip");
+            const badge = document.getElementById("lunaChatBadge");
+            const closeBtn = document.getElementById("lunaChatCloseBtn");
+            const minBtn = document.getElementById("lunaChatMinimizeBtn");
+            const chatBody = document.getElementById("lunaGlobalChatBody");
+            const form = document.getElementById("lunaGlobalChatForm");
+            const input = document.getElementById("lunaGlobalChatInput");
+            const chips = document.getElementById("lunaGlobalChips");
+
+            if (!trigger || !popover) return;
+
+            function togglePopover() {
+                const isCollapsed = popover.classList.contains("collapsed");
+                if (isCollapsed) {
+                    popover.classList.remove("collapsed");
+                    if (tooltip) tooltip.style.display = "none";
+                    if (badge) badge.style.display = "none";
+                    setTimeout(() => input?.focus(), 200);
+                } else {
+                    popover.classList.add("collapsed");
+                }
+            }
+
+            trigger.addEventListener("click", togglePopover);
+            if (closeBtn) closeBtn.addEventListener("click", () => popover.classList.add("collapsed"));
+            if (minBtn) minBtn.addEventListener("click", () => popover.classList.add("collapsed"));
+
+            function escapeHtml(text) {
+                if (!text) return "";
+                const div = document.createElement("div");
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            async function sendGlobalMessage(msgText) {
+                if (!msgText || !msgText.trim()) return;
+
+                const timeStr = new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+
+                // Hiển thị tin nhắn của người dùng
+                const userWrap = document.createElement("div");
+                userWrap.className = "luna-msg-wrap user";
+                userWrap.innerHTML = `
+                    <div class="luna-bubble-user">${escapeHtml(msgText)}</div>
+                    <span class="luna-msg-time">${timeStr}</span>
+                `;
+                chatBody.appendChild(userWrap);
+                if (input) input.value = "";
+                chatBody.scrollTop = chatBody.scrollHeight;
+
+                // Hiển thị hiệu ứng AI đang soạn câu trả lời (typing dots)
+                const typingWrap = document.createElement("div");
+                typingWrap.className = "luna-msg-wrap ai";
+                typingWrap.id = "lunaGlobalTyping";
+                typingWrap.innerHTML = `
+                    <div class="luna-typing-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                `;
+                chatBody.appendChild(typingWrap);
+                chatBody.scrollTop = chatBody.scrollHeight;
+
+                try {
+                    const response = await fetch("/AI/SendChat", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ Message: msgText })
+                    });
+
+                    const res = await response.json();
+                    typingWrap.remove();
+
+                    if (res && res.success) {
+                        const formattedReply = (res.reply || "")
+                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/\n/g, '<br />');
+
+                        const aiWrap = document.createElement("div");
+                        aiWrap.className = "luna-msg-wrap ai";
+                        aiWrap.innerHTML = `
+                            <div class="luna-bubble-ai">${formattedReply}</div>
+                            <span class="luna-msg-time">${timeStr}</span>
+                        `;
+                        chatBody.appendChild(aiWrap);
+
+                        // Cập nhật câu hỏi gợi ý mới từ Luna AI
+                        if (res.suggestedChips && res.suggestedChips.length > 0 && chips) {
+                            chips.innerHTML = res.suggestedChips.map(c => `
+                                <button type="button" class="luna-mini-chip" data-q="${escapeHtml(c)}">
+                                    ✦ ${escapeHtml(c)}
+                                </button>
+                            `).join("");
+                            attachMiniChips();
+                        }
+                    } else {
+                        const errWrap = document.createElement("div");
+                        errWrap.className = "luna-msg-wrap ai";
+                        errWrap.innerHTML = `<div class="luna-bubble-ai" style="color: #b91c1c;">Hệ thống tư vấn đang bận. Quý khách vui lòng thử lại sau giây lát!</div>`;
+                        chatBody.appendChild(errWrap);
+                    }
+                } catch (err) {
+                    typingWrap.remove();
+                    console.error("Lỗi gửi tin nhắn AI:", err);
+                    const errWrap = document.createElement("div");
+                    errWrap.className = "luna-msg-wrap ai";
+                    errWrap.innerHTML = `<div class="luna-bubble-ai" style="color: #b91c1c;">Không thể kết nối đến máy chủ AI. Vui lòng kiểm tra lại đường truyền mạng.</div>`;
+                    chatBody.appendChild(errWrap);
+                }
+
+                chatBody.scrollTop = chatBody.scrollHeight;
+            }
+
+            if (form) {
+                form.addEventListener("submit", function (e) {
+                    e.preventDefault();
+                    if (input) sendGlobalMessage(input.value);
+                });
+            }
+
+            function attachMiniChips() {
+                document.querySelectorAll(".luna-mini-chip").forEach(chip => {
+                    chip.onclick = function () {
+                        const q = this.getAttribute("data-q");
+                        sendGlobalMessage(q);
+                    };
+                });
+            }
+
+            attachMiniChips();
+        });
+    </script>
+
+    <!-- BOOTSTRAP 5.3 BUNDLE JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

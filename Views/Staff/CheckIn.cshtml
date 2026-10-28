@@ -1,0 +1,199 @@
+@model List<GiaoDienSpa.Controllers.StaffRoomBed>
+@{
+    ViewData["Title"] = "Trạm Tiếp Đón & Check-In Khách Hàng";
+}
+
+<div class="staff-checkin-page">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="fas fa-user-check text-teal me-2"></i> Trạm Tiếp Đón & Check-In Buồng Phòng</h3>
+            <p class="text-muted mb-0">Tiếp nhận khách đến trải nghiệm, phân phối buồng giường trị liệu và chỉ định KTV chăm sóc</p>
+        </div>
+        <div>
+            <a href="/Staff/Dashboard" class="btn btn-outline-secondary rounded-pill px-3">
+                <i class="fas fa-arrow-left me-1"></i> Quay lại Trạm Tác Nghiệp
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Form Check-in nhanh -->
+        <div class="col-lg-5">
+            <div class="card border-0 rounded-4 shadow-sm p-4 bg-white">
+                <h5 class="fw-bold mb-3 text-dark"><i class="fas fa-qrcode text-teal me-2"></i> Tiếp Đón Khách Mới</h5>
+                
+                <div id="checkinAlert" class="alert alert-success d-none rounded-3 py-2"></div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Họ và tên khách hàng <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-user text-muted"></i></span>
+                        <input type="text" id="custNameInput" class="form-control border-start-0" placeholder="Ví dụ: Hoàng Thu Thủy" required />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Số điện thoại liên hệ</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-phone text-muted"></i></span>
+                        <input type="tel" id="custPhoneInput" class="form-control border-start-0" placeholder="09xx.xxx.xxx" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Dịch vụ / Liệu trình thực hiện <span class="text-danger">*</span></label>
+                    <select id="serviceSelect" class="form-select">
+                        <option value="Laser Pico Trị Nám Chuyên Sâu">Laser Pico Trị Nám Chuyên Sâu (60 phút)</option>
+                        <option value="Aqua Detox Cấp Ẩm Đa Tầng">Aqua Detox Cấp Ẩm Đa Tầng (45 phút)</option>
+                        <option value="Nâng Cơ Trẻ Hóa Hifu Collagen">Nâng Cơ Trẻ Hóa Hifu Collagen (90 phút)</option>
+                        <option value="Peel Da Sinh Học Thảo Dược">Peel Da Sinh Học Thảo Dược (50 phút)</option>
+                        <option value="Massage Thư Giãn Body Tinh Dầu">Massage Thư Giãn Body Tinh Dầu (75 phút)</option>
+                        <option value="Khám & Chẩn Đoán Da AI Cùng Bác Sĩ">Khám & Chẩn Đoán Da AI Cùng Bác Sĩ (30 phút)</option>
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Chỉ định Buồng Phòng / Giường <span class="text-danger">*</span></label>
+                    <select id="roomSelect" class="form-select">
+                        @foreach (var room in Model)
+                        {
+                            var isAvail = room.Status == "Sẵn sàng" ? "✓ [Trống] " : $"[Đang: {room.Status}] ";
+                            <option value="@room.RoomId">@isAvail @room.RoomName (@room.BedCode)</option>
+                        }
+                    </select>
+                </div>
+
+                <button type="button" id="btnSubmitCheckIn" class="btn btn-teal w-100 py-2 rounded-pill fw-bold shadow-sm" onclick="performCheckIn()">
+                    <i class="fas fa-check-circle me-1"></i> Xác Nhận Check-In & Phân Phòng
+                </button>
+            </div>
+        </div>
+
+        <!-- Trạng thái phòng giường trực quan -->
+        <div class="col-lg-7">
+            <div class="card border-0 rounded-4 shadow-sm p-4 bg-white mb-4">
+                <h5 class="fw-bold mb-3"><i class="fas fa-door-open text-teal me-2"></i> Trạng Thái Các Buồng Phòng Hiện Tại</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="roomTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Phòng / Giường</th>
+                                <th>Khách hàng</th>
+                                <th>Dịch vụ</th>
+                                <th>Trạng thái</th>
+                                <th>Giờ vào</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var room in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">@room.RoomName</div>
+                                        <span class="badge bg-light text-dark border">@room.BedCode</span>
+                                    </td>
+                                    <td>
+                                        @if (string.IsNullOrEmpty(room.CustomerName) || room.CustomerName == "Chưa có khách")
+                                        {
+                                            <span class="text-muted fst-italic">-- Trống --</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="fw-bold text-dark">@room.CustomerName</span>
+                                        }
+                                    </td>
+                                    <td class="small">@room.ServiceName</td>
+                                    <td>
+                                        @if (room.Status == "Sẵn sàng")
+                                        {
+                                            <span class="badge bg-primary text-white rounded-pill px-2 py-1">@room.Status</span>
+                                        }
+                                        else if (room.Status == "Đang phục vụ")
+                                        {
+                                            <span class="badge bg-success text-white rounded-pill px-2 py-1">@room.Status</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark rounded-pill px-2 py-1">@room.Status</span>
+                                        }
+                                    </td>
+                                    <td class="small font-monospace">@room.StartTime</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Khách chờ tiếp đón -->
+            <div class="card border-0 rounded-4 shadow-sm p-4 bg-white">
+                <h6 class="fw-bold mb-3 text-dark"><i class="fas fa-clock text-warning me-2"></i> Khách Đặt Hẹn Trước Sắp Đến Trong Giờ Này</h6>
+                <div class="d-flex flex-column gap-2">
+                    <div class="p-3 rounded-3 bg-light d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-teal text-white me-2">14:00</span>
+                            <strong>Chị Vũ Bích Ngọc</strong> - 0977.882.334
+                            <div class="text-muted small">Nâng Cơ Trẻ Hóa Hifu Collagen (Bác sĩ chỉ định)</div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-teal rounded-pill" onclick="fillQuick('Vũ Bích Ngọc', '0977882334', 'Nâng Cơ Trẻ Hóa Hifu Collagen')">
+                            Tiếp đón ngay
+                        </button>
+                    </div>
+
+                    <div class="p-3 rounded-3 bg-light d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-teal text-white me-2">15:15</span>
+                            <strong>Chị Đỗ Thu Uyên</strong> - 0936.112.334
+                            <div class="text-muted small">Aqua Detox Cấp Ẩm Đa Tầng</div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-teal rounded-pill" onclick="fillQuick('Đỗ Thu Uyên', '0936112334', 'Aqua Detox Cấp Ẩm Đa Tầng')">
+                            Tiếp đón ngay
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function fillQuick(name, phone, service) {
+    document.getElementById('custNameInput').value = name;
+    document.getElementById('custPhoneInput').value = phone;
+    document.getElementById('serviceSelect').value = service;
+}
+
+async function performCheckIn() {
+    const custName = document.getElementById('custNameInput').value.trim();
+    const service = document.getElementById('serviceSelect').value;
+    const roomId = parseInt(document.getElementById('roomSelect').value);
+    const alertBox = document.getElementById('checkinAlert');
+
+    if (!custName) {
+        alert('Vui lòng nhập tên khách hàng tiếp đón!');
+        return;
+    }
+
+    try {
+        const res = await fetch('/Staff/QuickCheckIn', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ roomId: roomId, customerName: custName, serviceName: service })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alertBox.classList.remove('d-none');
+            alertBox.innerHTML = '<i class="fas fa-check-circle me-1"></i> ' + data.message;
+            setTimeout(() => {
+                location.reload();
+            }, 1200);
+        } else {
+            alert(data.message || 'Lỗi check-in');
+        }
+    } catch(err) {
+        console.error(err);
+        alert('Có lỗi xảy ra khi gửi dữ liệu check-in!');
+    }
+}
+</script>

@@ -1,0 +1,544 @@
+@model IEnumerable<GiaoDienSpa.Models.Customer>
+
+@{
+    ViewData["Title"] = "Quản lý khách hàng";
+}
+
+<div class="customer-page">
+
+    <!-- TIÊU ĐỀ TRANG -->
+    <div class="customer-page-header">
+        <div>
+            <div class="customer-breadcrumb">LUNA SPA / Quản trị quan hệ khách hàng (CRM)</div>
+            <h1>Quản lý hồ sơ khách hàng & Phác đồ da</h1>
+            <p>Hồ sơ bệnh lý da, hạng thành viên VIP, lịch sử chăm sóc sắc đẹp và phác đồ cá nhân hóa AI.</p>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="spa-ai-btn" id="openAiCrmModal" type="button">
+                <span>✨</span> AI Phân tích tệp khách VIP
+            </button>
+            <button class="customer-primary-btn" id="openCustomerModal" type="button">
+                <span>＋</span> Thêm khách hàng mới
+            </button>
+        </div>
+    </div>
+
+    <!-- THỐNG KÊ KHÁCH HÀNG -->
+    <div class="customer-stats">
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-purple">♙</div>
+            <div>
+                <span class="customer-stat-label">Tổng khách hàng</span>
+                <strong id="totalCustomers">@ViewBag.TotalCustomers</strong>
+                <small>Khách hàng trong hệ thống</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-green">✓</div>
+            <div>
+                <span class="customer-stat-label">Đang hoạt động</span>
+                <strong id="activeCustomers">@ViewBag.ActiveCustomers</strong>
+                <small>Khách hàng đang theo phác đồ</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-orange">★</div>
+            <div>
+                <span class="customer-stat-label">Hội viên VIP (Vàng/Kim Cương)</span>
+                <strong id="vipCustomers">@ViewBag.VipCustomers</strong>
+                <small>Chi tiêu trên 10 triệu đồng</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-blue">＋</div>
+            <div>
+                <span class="customer-stat-label">Khách mới tháng này</span>
+                <strong id="newCustomers">@ViewBag.NewCustomersThisMonth</strong>
+                <small>Đăng ký trải nghiệm dịch vụ</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI SMART BANNER -->
+    <div class="spa-ai-banner">
+        <div class="spa-ai-banner-left">
+            <div class="spa-ai-icon-pulse">✦</div>
+            <div class="spa-ai-content">
+                <span class="spa-ai-tag">✨ TRỢ LÝ CHẨN ĐOÁN DA LIỄU & CHĂM SÓC KHÁCH HÀNG AI</span>
+                <p class="spa-ai-text">
+                    Phát hiện 18 khách hàng VIP có chu kỳ chăm sóc da định kỳ vào cuối tuần này. Hệ thống gợi ý gửi tin nhắn chúc mừng sinh nhật, thông báo ưu đãi nâng hạng thành viên và gợi ý phác đồ cấp ẩm mùa khô.
+                </p>
+            </div>
+        </div>
+        <button class="spa-ai-btn" id="aiCrmBannerBtn" type="button">Xem danh sách chăm sóc</button>
+    </div>
+
+    <!-- DANH SÁCH KHÁCH HÀNG -->
+    <div class="customer-content-card">
+        <div class="customer-content-heading">
+            <div>
+                <h2>Danh sách khách hàng LUNA SPA</h2>
+                <p>Theo dõi loại da, hạng thành viên và gợi ý chăm sóc chuyên sâu.</p>
+            </div>
+            <span class="customer-total-badge" id="customerCountBadge">@Model.Count() khách hàng</span>
+        </div>
+
+        <div class="customer-toolbar">
+            <div class="customer-search-box">
+                <span>⌕</span>
+                <input type="text" id="customerSearch"
+                       placeholder="Tìm theo tên, mã KH, số điện thoại, tình trạng da..." />
+            </div>
+
+            <select id="customerLevelFilter" class="customer-filter">
+                <option value="">Tất cả hạng thành viên</option>
+                <option value="Kim cương">Kim cương</option>
+                <option value="Vàng">Vàng</option>
+                <option value="Bạc">Bạc</option>
+                <option value="Thường">Thường</option>
+            </select>
+
+            <select id="customerSkinFilter" class="customer-filter">
+                <option value="">Tất cả loại da</option>
+                <option value="dầu">Da dầu mụn</option>
+                <option value="khô">Da khô mất nước</option>
+                <option value="lão hóa">Da lão hóa & nám</option>
+                <option value="nhạy cảm">Da nhạy cảm</option>
+                <option value="hỗn hợp">Da hỗn hợp</option>
+            </select>
+
+            <select id="customerStatusFilter" class="customer-filter">
+                <option value="">Tất cả trạng thái</option>
+                <option value="Đang hoạt động">Đang hoạt động</option>
+                <option value="Ngừng hoạt động">Ngừng hoạt động</option>
+            </select>
+
+            <button class="customer-secondary-btn" id="resetCustomerFilter" type="button">
+                ↺ Làm mới
+            </button>
+        </div>
+
+        <div class="customer-table-wrap">
+            <table class="customer-table">
+                <thead>
+                    <tr>
+                        <th>KHÁCH HÀNG</th>
+                        <th>LIÊN HỆ</th>
+                        <th>TÌNH TRẠNG DA</th>
+                        <th>HẠNG THÀNH VIÊN</th>
+                        <th>ĐIỂM TÍCH LŨY</th>
+                        <th>TRẠNG THÁI</th>
+                        <th class="customer-action-heading">THAO TÁC</th>
+                    </tr>
+                </thead>
+                <tbody id="customerTableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="customer-table-footer">
+            <span id="customerPageInfo">Hiển thị @Model.Count() khách hàng</span>
+            <div class="customer-pagination">
+                <button type="button" disabled>‹</button>
+                <button type="button" class="current-page">1</button>
+                <button type="button" disabled>›</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- POPUP THÊM / SỬA KHÁCH HÀNG -->
+<div class="customer-modal-backdrop" id="customerModal">
+    <div class="customer-modal">
+        <div class="customer-modal-header">
+            <div>
+                <h2 id="customerModalTitle">Thêm khách hàng mới</h2>
+                <p>Nhập thông tin hồ sơ và tình trạng da của khách hàng.</p>
+            </div>
+            <button type="button" class="customer-modal-close" id="closeCustomerModal">×</button>
+        </div>
+
+        <form id="customerForm">
+            <input type="hidden" id="customerEditId" />
+
+            <div class="customer-form-grid">
+                <div class="customer-form-group">
+                    <label for="customerName">Họ và tên <span>*</span></label>
+                    <input id="customerName" type="text" placeholder="Nhập họ và tên khách hàng" required />
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="customerPhone">Số điện thoại <span>*</span></label>
+                    <input id="customerPhone" type="tel" placeholder="Ví dụ: 0987 654 321" required />
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="customerEmail">Email</label>
+                    <input id="customerEmail" type="email" placeholder="example@gmail.com" />
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="customerBirthday">Ngày sinh</label>
+                    <input id="customerBirthday" type="date" />
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="customerGender">Giới tính</label>
+                    <select id="customerGender">
+                        <option value="Nữ">Nữ</option>
+                        <option value="Nam">Nam</option>
+                        <option value="Khác">Khác</option>
+                    </select>
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="customerLevel">Hạng thành viên</label>
+                    <select id="customerLevel">
+                        <option value="Thường">Thường</option>
+                        <option value="Bạc">Bạc</option>
+                        <option value="Vàng">Vàng</option>
+                        <option value="Kim cương">Kim cương</option>
+                    </select>
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="customerSkinType">Tình trạng da / Bệnh lý da <span>*</span></label>
+                    <select id="customerSkinType" required>
+                        <option value="Da hỗn hợp thiên dầu">Da hỗn hợp thiên dầu</option>
+                        <option value="Da khô mất nước">Da khô mất nước</option>
+                        <option value="Da dầu mụn ẩn">Da dầu mụn ẩn</option>
+                        <option value="Da lão hóa & nám mảng">Da lão hóa & nám mảng</option>
+                        <option value="Da nhạy cảm dễ ửng đỏ">Da nhạy cảm dễ ửng đỏ</option>
+                        <option value="Da thường">Da thường</option>
+                    </select>
+                </div>
+
+                <div class="customer-form-group">
+                    <label for="customerStatus">Trạng thái hồ sơ</label>
+                    <select id="customerStatus">
+                        <option value="Đang hoạt động">Đang hoạt động</option>
+                        <option value="Ngừng hoạt động">Ngừng hoạt động</option>
+                    </select>
+                </div>
+
+                <div class="customer-form-group customer-form-full">
+                    <label for="customerNote">Ghi chú liệu trình & Lưu ý đặc biệt</label>
+                    <textarea id="customerNote" rows="2"
+                              placeholder="Tiền sử dị ứng mỹ phẩm, thói quen sinh hoạt, liệu trình đã từng làm..."></textarea>
+                </div>
+            </div>
+
+            <div class="customer-modal-footer">
+                <button type="button" class="customer-secondary-btn" id="cancelCustomerModal">Hủy</button>
+                <button type="submit" class="customer-primary-btn" id="saveCustomerBtn">Lưu khách hàng</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL AI CHẨN ĐOÁN DA LIỄU & PHÁC ĐỒ -->
+<div class="customer-modal-backdrop" id="aiSkinModal">
+    <div class="customer-modal" style="max-width: 600px;">
+        <div class="customer-modal-header" style="background: linear-gradient(135deg, #fdf8fb 0%, #faedf4 100%);">
+            <div>
+                <span class="spa-ai-tag">✨ TRỢ LÝ DA LIỄU LUNA AI</span>
+                <h2 style="color: #985c7e; margin-top: 4px;" id="aiSkinCustomerName">Phác đồ chăm sóc cá nhân hóa</h2>
+                <p id="aiSkinSubtitle">Tình trạng da và lộ trình điều trị khuyến nghị.</p>
+            </div>
+            <button type="button" class="customer-modal-close" id="closeAiSkinModal">×</button>
+        </div>
+
+        <div style="padding: 22px 25px;">
+            <div style="background: #fdfafc; border: 1px solid #eee7ed; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px;">
+                <span style="font-size: 11px; color: #8c8296; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Chẩn đoán AI:</span>
+                <p id="aiSkinDiagnosisText" style="margin: 6px 0 0; color: #3b2c4e; font-size: 13px; line-height: 1.5; font-weight: 550;">
+                    Đang tải dữ liệu...
+                </p>
+            </div>
+
+            <div style="margin-bottom: 16px;">
+                <strong style="display:block; font-size: 13px; color: #302744; margin-bottom: 8px;">Dịch vụ đề xuất thực hiện:</strong>
+                <div id="aiSuggestedServices" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <!-- Tags -->
+                </div>
+            </div>
+
+            <div style="background: #f7edf3; border: 1px dashed #dfc7d6; border-radius: 10px; padding: 12px 14px; font-size: 12px; color: #79576e;">
+                🧴 <strong>Mỹ phẩm kết hợp tại nhà:</strong>
+                <span id="aiSuggestedCosmetics" style="font-weight: 600;">Serum B5 HA & Kem chống nắng</span>
+            </div>
+        </div>
+
+        <div class="customer-modal-footer">
+            <button type="button" class="customer-secondary-btn" id="closeAiSkinBtn">Đóng</button>
+            <a asp-controller="Appointments" asp-action="Index" class="customer-primary-btn" style="text-decoration:none;">
+                📅 Đặt lịch theo phác đồ này
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let customers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }));
+
+    const tableBody = document.getElementById("customerTableBody");
+    const modal = document.getElementById("customerModal");
+    const form = document.getElementById("customerForm");
+    const aiSkinModal = document.getElementById("aiSkinModal");
+
+    function escapeHtml(value) {
+        return String(value ?? "").replace(/[&<>"']/g, function (c) {
+            return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[c];
+        });
+    }
+
+    function levelClass(level) {
+        if (level === "Kim cương") return "level-diamond";
+        if (level === "Vàng") return "level-gold";
+        if (level === "Bạc") return "level-silver";
+        return "level-normal";
+    }
+
+    function formatCurrency(num) {
+        return Number(num || 0).toLocaleString("vi-VN") + " đ";
+    }
+
+    function renderCustomers() {
+        const keyword = document.getElementById("customerSearch").value.trim().toLowerCase();
+        const level = document.getElementById("customerLevelFilter").value;
+        const skin = document.getElementById("customerSkinFilter").value.toLowerCase();
+        const status = document.getElementById("customerStatusFilter").value;
+
+        const filtered = customers.filter(c => {
+            const matchKeyword =
+                c.fullName.toLowerCase().includes(keyword) ||
+                (c.customerCode && c.customerCode.toLowerCase().includes(keyword)) ||
+                c.phone.toLowerCase().includes(keyword) ||
+                (c.skinType && c.skinType.toLowerCase().includes(keyword));
+
+            const matchLevel = !level || c.membershipLevel === level;
+            const matchSkin = !skin || (c.skinType && c.skinType.toLowerCase().includes(skin));
+            const matchStatus = !status || c.status === status;
+
+            return matchKeyword && matchLevel && matchSkin && matchStatus;
+        });
+
+        tableBody.innerHTML = "";
+
+        if (filtered.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="customer-empty">
+                        Không tìm thấy khách hàng phù hợp với bộ lọc.
+                    </td>
+                </tr>`;
+        } else {
+            filtered.forEach(c => {
+                const initials = c.fullName.trim().split(/\s+/).slice(-2)
+                    .map(w => w.charAt(0)).join("").toUpperCase();
+
+                const isVip = c.membershipLevel === "Vàng" || c.membershipLevel === "Kim cương";
+
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>
+                        <div class="customer-person">
+                            <div class="customer-avatar" style="${isVip ? 'background:#fdf2e9; color:#d88a2c;' : ''}">${escapeHtml(initials)}</div>
+                            <div>
+                                <strong style="color:#342845;">${escapeHtml(c.fullName)}</strong>
+                                <small>${escapeHtml(c.customerCode || ('KH' + String(c.customerId).padStart(3, '0')))}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div>${escapeHtml(c.phone)}</div>
+                        <small style="color:#9c93a7; font-size:11px;">${escapeHtml(c.email || '—')}</small>
+                    </td>
+                    <td>
+                        <span class="skin-badge">${escapeHtml(c.skinType || 'Da hỗn hợp')}</span>
+                    </td>
+                    <td>
+                        <span class="customer-level ${levelClass(c.membershipLevel)}">${escapeHtml(c.membershipLevel)}</span>
+                    </td>
+                    <td>
+                        <div style="font-weight:700; color:#985c7e; font-size:13px;">${c.loyaltyPoints || 0} điểm</div>
+                        <small style="color:#9c93a7; font-size:11px;">Tổng chi: ${formatCurrency(c.totalSpent)}</small>
+                    </td>
+                    <td>
+                        <span class="customer-status ${c.status === "Đang hoạt động" ? "status-active" : "status-inactive"}">
+                            <i></i>${escapeHtml(c.status)}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="customer-row-actions">
+                            <button type="button" title="Xem phân tích phác đồ da AI" data-action="ai-skin" data-id="${c.customerId}" style="color:#985c7e;">✨</button>
+                            <button type="button" title="Chỉnh sửa hồ sơ" data-action="edit" data-id="${c.customerId}">✎</button>
+                            <button type="button" title="Xóa" data-action="delete" data-id="${c.customerId}">⌫</button>
+                        </div>
+                    </td>`;
+                tableBody.appendChild(row);
+            });
+        }
+
+        const active = customers.filter(c => c.status === "Đang hoạt động").length;
+        const vips = customers.filter(c => ["Vàng", "Kim cương"].includes(c.membershipLevel)).length;
+
+        document.getElementById("totalCustomers").textContent = customers.length;
+        document.getElementById("activeCustomers").textContent = active;
+        document.getElementById("vipCustomers").textContent = vips;
+        document.getElementById("customerCountBadge").textContent = `${filtered.length} khách hàng`;
+        document.getElementById("customerPageInfo").textContent = `Đang hiển thị ${filtered.length} trong tổng số ${customers.length} khách hàng`;
+    }
+
+    function openModal(c = null) {
+        form.reset();
+        document.getElementById("customerEditId").value = "";
+        document.getElementById("customerModalTitle").textContent = c ? "Chỉnh sửa khách hàng" : "Thêm khách hàng mới";
+
+        if (c) {
+            document.getElementById("customerEditId").value = c.customerId;
+            document.getElementById("customerName").value = c.fullName;
+            document.getElementById("customerPhone").value = c.phone;
+            document.getElementById("customerEmail").value = c.email || "";
+            document.getElementById("customerBirthday").value = c.birthday || "";
+            document.getElementById("customerGender").value = c.gender || "Nữ";
+            document.getElementById("customerLevel").value = c.membershipLevel || "Thường";
+            document.getElementById("customerSkinType").value = c.skinType || "Da hỗn hợp thiên dầu";
+            document.getElementById("customerStatus").value = c.status || "Đang hoạt động";
+            document.getElementById("customerNote").value = c.note || "";
+        }
+
+        modal.classList.add("show");
+    }
+
+    function closeModal() {
+        modal.classList.remove("show");
+    }
+
+    document.getElementById("openCustomerModal").addEventListener("click", () => openModal());
+    document.getElementById("closeCustomerModal").addEventListener("click", closeModal);
+    document.getElementById("cancelCustomerModal").addEventListener("click", closeModal);
+    modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+
+    // AI Skin Diagnostic Modal
+    function openAiSkinModal(customer) {
+        document.getElementById("aiSkinCustomerName").textContent = `Phác đồ da: ${customer.fullName} (${customer.membershipLevel})`;
+        document.getElementById("aiSkinSubtitle").textContent = `Phân tích tình trạng: ${customer.skinType} • Tích lũy: ${customer.loyaltyPoints || 0} điểm`;
+        document.getElementById("aiSkinDiagnosisText").textContent = customer.aiSkinAnalysis || "Chưa có chẩn đoán chi tiết.";
+
+        const servicesBox = document.getElementById("aiSuggestedServices");
+        servicesBox.innerHTML = "";
+        const services = customer.skinType.toLowerCase().includes("mụn")
+            ? ["Lấy nhân mụn y khoa", "Chiếu Bio-Light", "Peel da mờ thâm"]
+            : (customer.skinType.toLowerCase().includes("lão hóa") || customer.skinType.toLowerCase().includes("nám")
+                ? ["Trẻ hóa da Laser Pico", "Nâng cơ Hifu Ultra", "Mặt nạ vàng 24K"]
+                : ["Chăm sóc Aqua Detox", "Massage Thảo dược", "Cấp ẩm sâu B5 HA"]);
+
+        services.forEach(s => {
+            const span = document.createElement("span");
+            span.className = "employee-specialty-badge";
+            span.textContent = "✦ " + s;
+            servicesBox.appendChild(span);
+        });
+
+        document.getElementById("aiSuggestedCosmetics").textContent = customer.skinType.toLowerCase().includes("mụn")
+            ? "Sữa rửa mặt tạo bọt dịu nhẹ + Kem dưỡng phục hồi B5"
+            : "Serum B5 HA Intensifier + Mặt nạ vàng 24K Collagen";
+
+        aiSkinModal.classList.add("show");
+    }
+
+    document.getElementById("openAiCrmModal").addEventListener("click", function() {
+        if (customers.length) openAiSkinModal(customers[0]);
+    });
+    document.getElementById("aiCrmBannerBtn").addEventListener("click", function() {
+        if (customers.length) openAiSkinModal(customers[0]);
+    });
+    document.getElementById("closeAiSkinModal").addEventListener("click", () => aiSkinModal.classList.remove("show"));
+    document.getElementById("closeAiSkinBtn").addEventListener("click", () => aiSkinModal.classList.remove("show"));
+    aiSkinModal.addEventListener("click", e => { if (e.target === aiSkinModal) aiSkinModal.classList.remove("show"); });
+
+    // Filter
+    document.getElementById("customerSearch").addEventListener("input", renderCustomers);
+    document.getElementById("customerLevelFilter").addEventListener("change", renderCustomers);
+    document.getElementById("customerSkinFilter").addEventListener("change", renderCustomers);
+    document.getElementById("customerStatusFilter").addEventListener("change", renderCustomers);
+    document.getElementById("resetCustomerFilter").addEventListener("click", function () {
+        document.getElementById("customerSearch").value = "";
+        document.getElementById("customerLevelFilter").value = "";
+        document.getElementById("customerSkinFilter").value = "";
+        document.getElementById("customerStatusFilter").value = "";
+        renderCustomers();
+    });
+
+    // Form submit
+    form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const editId = document.getElementById("customerEditId").value;
+        const cData = {
+            customerId: editId ? Number(editId) : 0,
+            fullName: document.getElementById("customerName").value.trim(),
+            phone: document.getElementById("customerPhone").value.trim(),
+            email: document.getElementById("customerEmail").value.trim(),
+            birthday: document.getElementById("customerBirthday").value,
+            gender: document.getElementById("customerGender").value,
+            membershipLevel: document.getElementById("customerLevel").value,
+            skinType: document.getElementById("customerSkinType").value,
+            status: document.getElementById("customerStatus").value,
+            note: document.getElementById("customerNote").value.trim()
+        };
+
+        if (editId) {
+            const index = customers.findIndex(c => c.customerId === Number(editId));
+            if (index !== -1) {
+                cData.customerCode = customers[index].customerCode;
+                cData.loyaltyPoints = customers[index].loyaltyPoints;
+                cData.totalSpent = customers[index].totalSpent;
+                cData.aiSkinAnalysis = customers[index].aiSkinAnalysis;
+                customers[index] = cData;
+            }
+        } else {
+            const newId = customers.length ? Math.max(...customers.map(c => c.customerId)) + 1 : 1;
+            cData.customerId = newId;
+            cData.customerCode = "KH" + String(newId).padStart(3, "0");
+            cData.loyaltyPoints = 50;
+            cData.totalSpent = 0;
+            cData.aiSkinAnalysis = `AI Chẩn đoán: Khách hàng mới có làn da ${cData.skinType}. Khuyến nghị kiểm tra chuyên sâu bằng máy soi da 3D buổi đầu.`;
+            customers.unshift(cData);
+        }
+
+        closeModal();
+        renderCustomers();
+    });
+
+    // Table click
+    tableBody.addEventListener("click", function (e) {
+        const btn = e.target.closest("button[data-action]");
+        if (!btn) return;
+
+        const id = Number(btn.dataset.id);
+        const c = customers.find(x => x.customerId === id);
+        if (!c) return;
+
+        const action = btn.dataset.action;
+
+        if (action === "ai-skin") {
+            openAiSkinModal(c);
+        } else if (action === "edit") {
+            openModal(c);
+        } else if (action === "delete") {
+            if (confirm(`Bạn có chắc muốn xóa khách hàng "${c.fullName}" (${c.customerCode})?`)) {
+                customers = customers.filter(x => x.customerId !== id);
+                renderCustomers();
+            }
+        }
+    });
+
+    renderCustomers();
+</script>
+}

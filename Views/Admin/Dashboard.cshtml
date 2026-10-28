@@ -1,0 +1,154 @@
+@{
+    ViewData["Title"] = "Trung tâm Điều Hành & Quản Trị Tối Cao";
+}
+
+<div class="customer-page dashboard-page">
+
+    <!-- TIÊU ĐỀ TRANG QUẢN TRỊ ADMIN -->
+    <div class="customer-page-header">
+        <div>
+            <div class="customer-breadcrumb">
+                <a asp-controller="Home" asp-action="Index" style="text-decoration:none; color:inherit;">LUNA SPA</a> / 🛡️ Bảng điều khiển Quản trị viên
+            </div>
+            <h1>Trung tâm Điều hành Toàn diện Hệ thống Spa & AI Clinic</h1>
+            <p>Báo cáo thời gian thực doanh thu, chỉ số P&L, hiệu suất nhân sự và giám sát vận hành toàn bộ chi nhánh.</p>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a asp-controller="Home" asp-action="Index" class="customer-secondary-btn" style="text-decoration:none;">
+                <span>🌐</span> Xem cổng công khai
+            </a>
+            <a asp-controller="Reports" asp-action="Index" class="customer-primary-btn" style="text-decoration:none; background: #985c7e;">
+                <span>▥</span> Báo cáo Doanh thu & P&L
+            </a>
+            <a asp-controller="Appointments" asp-action="Index" class="customer-primary-btn" style="text-decoration:none;">
+                <span>＋</span> Quản lý Lịch hẹn
+            </a>
+        </div>
+    </div>
+
+    <!-- BANNER TRỢ LÝ ĐIỀU HÀNH TỔNG QUAN LUNA AI EXECUTIVE -->
+    <div class="spa-ai-banner">
+        <div class="spa-ai-banner-left">
+            <div class="spa-ai-icon-pulse">🛡️</div>
+            <div>
+                <span class="spa-ai-tag">LUNA AI EXECUTIVE FINANCIAL & OPERATIONS AUDIT</span>
+                <h3>Hệ thống vận hành đạt 92% công suất chuẩn 5 sao</h3>
+                <p>
+                    Doanh thu tích lũy đạt <strong>@(((decimal)(ViewBag.MonthlyRevenue ?? 148500000)).ToString("N0")) đ</strong> (+@ViewBag.WeeklyGrowthRate% so với tuần trước).
+                    Biên lợi nhuận ròng đạt <strong>@ViewBag.ProfitMargin%</strong>. Đề xuất: Mở rộng thêm 2 giường tại Phòng Laser Công nghệ cao vào khung giờ 14:00 - 18:00 để tối ưu doanh thu.
+                </p>
+            </div>
+        </div>
+        <div class="spa-ai-banner-right">
+            <a asp-controller="AI" asp-action="Index" class="spa-ai-action-btn" style="text-decoration:none;">
+                Tư vấn Chiến lược AI ➤
+            </a>
+        </div>
+    </div>
+
+    <!-- 4 THẺ CHỈ SỐ KPI TÀI CHÍNH & VẬN HÀNH DÀNH RIÊNG CHO ADMIN -->
+    <div class="customer-stats">
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-purple">₫</div>
+            <div>
+                <span class="customer-stat-label">Tổng doanh thu tháng</span>
+                <strong style="color: #985c7e;">@(((decimal)(ViewBag.MonthlyRevenue ?? 148500000)).ToString("N0")) đ</strong>
+                <small style="color: #278c57; font-weight: 600;">+@ViewBag.WeeklyGrowthRate% so với tháng trước</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-green">📊</div>
+            <div>
+                <span class="customer-stat-label">Biên lợi nhuận ròng (EBITDA)</span>
+                <strong style="color: #278c57;">@ViewBag.ProfitMargin%</strong>
+                <small>Lợi nhuận ròng: 89.200.000 đ</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-orange">♙</div>
+            <div>
+                <span class="customer-stat-label">Khách hàng định danh</span>
+                <strong style="color: #d88a2c;">@ViewBag.TotalCustomers thành viên</strong>
+                <small>68% khách hàng VIP hạng Vàng/Bạc</small>
+            </div>
+        </div>
+
+        <div class="customer-stat-card">
+            <div class="customer-stat-icon stat-pink">♧</div>
+            <div>
+                <span class="customer-stat-label">Nhân sự & Bác sĩ</span>
+                <strong style="color: #a76d8e;">@ViewBag.ActiveStaffCount nhân sự</strong>
+                <small>Đang hoạt động: 4 Bác sĩ & 10 KTV</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- KHỐI QUẢN TRỊ 6 PHÂN HỆ CHÍNH -->
+    <div style="margin-top: 24px;">
+        <h2 style="font-size: 18px; font-weight: 700; color: #3b2c4e; margin-bottom: 14px;">Các Phân Hệ Quản Trị Hệ Thống Tối Cao</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+            <a asp-controller="Customers" asp-action="Index" style="text-decoration:none;" class="customer-table-card" style="padding: 18px; transition: transform 0.2s;">
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <div style="width: 44px; height: 44px; border-radius: 12px; background: #faf0f6; color: #985c7e; display: grid; place-items: center; font-size: 20px;">♙</div>
+                    <div>
+                        <strong style="color: #3b2c4e; font-size: 15px;">Quản lý Khách hàng</strong>
+                        <p style="margin: 2px 0 0; color: #7a6e84; font-size: 12px;">Hồ sơ, phân hạng VIP, lịch sử chi tiêu</p>
+                    </div>
+                </div>
+            </a>
+
+            <a asp-controller="Services" asp-action="Index" style="text-decoration:none;" class="customer-table-card" style="padding: 18px;">
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <div style="width: 44px; height: 44px; border-radius: 12px; background: #eef7f3; color: #278c57; display: grid; place-items: center; font-size: 20px;">✧</div>
+                    <div>
+                        <strong style="color: #3b2c4e; font-size: 15px;">Danh mục Dịch vụ & Combo</strong>
+                        <p style="margin: 2px 0 0; color: #7a6e84; font-size: 12px;">Bảng giá niêm yết, phác đồ điều trị, combo</p>
+                    </div>
+                </div>
+            </a>
+
+            <a asp-controller="Appointments" asp-action="Index" style="text-decoration:none;" class="customer-table-card" style="padding: 18px;">
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <div style="width: 44px; height: 44px; border-radius: 12px; background: #eff6ff; color: #2563eb; display: grid; place-items: center; font-size: 20px;">▣</div>
+                    <div>
+                        <strong style="color: #3b2c4e; font-size: 15px;">Quản lý Lịch hẹn</strong>
+                        <p style="margin: 2px 0 0; color: #7a6e84; font-size: 12px;">Điều phối ca, gán phòng & giường trị liệu</p>
+                    </div>
+                </div>
+            </a>
+
+            <a asp-controller="Employees" asp-action="Index" style="text-decoration:none;" class="customer-table-card" style="padding: 18px;">
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <div style="width: 44px; height: 44px; border-radius: 12px; background: #fefce8; color: #ca8a04; display: grid; place-items: center; font-size: 20px;">♧</div>
+                    <div>
+                        <strong style="color: #3b2c4e; font-size: 15px;">Nhân sự & Bác sĩ</strong>
+                        <p style="margin: 2px 0 0; color: #7a6e84; font-size: 12px;">Phân ca trực, hoa hồng dịch vụ, hiệu suất</p>
+                    </div>
+                </div>
+            </a>
+
+            <a asp-controller="Inventory" asp-action="Index" style="text-decoration:none;" class="customer-table-card" style="padding: 18px;">
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <div style="width: 44px; height: 44px; border-radius: 12px; background: #faf5ff; color: #9333ea; display: grid; place-items: center; font-size: 20px;">▤</div>
+                    <div>
+                        <strong style="color: #3b2c4e; font-size: 15px;">Kho Dược Mỹ Phẩm</strong>
+                        <p style="margin: 2px 0 0; color: #7a6e84; font-size: 12px;">Tồn kho, nhập xuất, hạn sử dụng serum & tế bào gốc</p>
+                    </div>
+                </div>
+            </a>
+
+            <a asp-controller="Invoices" asp-action="Index" style="text-decoration:none;" class="customer-table-card" style="padding: 18px;">
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <div style="width: 44px; height: 44px; border-radius: 12px; background: #fff1f2; color: #e11d48; display: grid; place-items: center; font-size: 20px;">▧</div>
+                    <div>
+                        <strong style="color: #3b2c4e; font-size: 15px;">Hóa đơn & Thu ngân</strong>
+                        <p style="margin: 2px 0 0; color: #7a6e84; font-size: 12px;">Doanh thu thanh toán, in hóa đơn VAT, POS</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>

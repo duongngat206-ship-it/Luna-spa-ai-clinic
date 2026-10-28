@@ -1,0 +1,197 @@
+@model dynamic
+@{
+    ViewData["Title"] = "Toa Dược Mỹ Phẩm & Skincare Habit Tracker";
+    var habits = ViewBag.Habits as List<GiaoDienSpa.Controllers.SkincareHabitStep> ?? new List<GiaoDienSpa.Controllers.SkincareHabitStep>();
+    var morningHabits = habits.Where(h => h.Period.Contains("Sáng")).ToList();
+    var eveningHabits = habits.Where(h => h.Period.Contains("Tối")).ToList();
+}
+
+<div class="customer-prescriptions-page">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="fas fa-prescription-bottle-alt text-teal me-2"></i> Toa Dược Mỹ Phẩm & Nhật Ký Thoa Kem</h3>
+            <p class="text-muted mb-0">Phác đồ chăm sóc da chuẩn y khoa được Bác sĩ CKI kê đơn & Theo dõi thói quen skincare mỗi ngày</p>
+        </div>
+        <div>
+            <a href="/CustomerPortal/Index" class="btn btn-outline-secondary rounded-pill px-3">
+                <i class="fas fa-arrow-left me-1"></i> Cổng Hội Viên
+            </a>
+        </div>
+    </div>
+
+    <!-- Habit Tracker Status Bar -->
+    <div class="card border-0 rounded-4 shadow-sm p-4 bg-white mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <h5 class="fw-bold mb-1"><i class="fas fa-calendar-check text-success me-2"></i> Nhật Ký Thói Quen Chăm Sóc Da Hôm Nay</h5>
+                <p class="text-muted small mb-0">Đánh dấu vào từng bước khi bạn đã thoa kem để đảm bảo hiệu quả phục hồi tốt nhất</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-teal text-white rounded-pill px-3 py-2 fw-bold">
+                    <i class="fas fa-check-circle me-1"></i> Đã hoàn thành: @habits.Count(h => h.IsCompleted) / @habits.Count bước
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- Routine Buổi Sáng -->
+        <div class="col-lg-6">
+            <div class="card border-0 rounded-4 shadow-sm p-4 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fs-4 text-warning"><i class="fas fa-sun"></i></span>
+                        <div>
+                            <h5 class="fw-bold mb-0">Quy Trình Buổi Sáng (AM Routine)</h5>
+                            <div class="small text-muted">Bảo vệ & Phục hồi hàng rào ẩm tự nhiên</div>
+                        </div>
+                    </div>
+                    <span class="badge bg-warning text-dark rounded-pill">07:00 - 07:30</span>
+                </div>
+
+                <div class="d-flex flex-column gap-3">
+                    <!-- Bước 1 -->
+                    <div class="p-3 rounded-4 bg-light border-start border-4 border-warning">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="badge bg-warning text-dark rounded-pill mb-1">Bước 1: Làm sạch dịu nhẹ</span>
+                                <h6 class="fw-bold text-dark mb-1">Sữa rửa mặt Gel Amino Acid Dịu Nhẹ</h6>
+                                <div class="small text-muted">Liều lượng: 1 hạt đậu. Massage nhẹ nhàng 30 giây rồi rửa lại với nước mát.</div>
+                            </div>
+                            <div class="form-check form-switch fs-5">
+                                <input class="form-check-input cursor-pointer" type="checkbox" id="habit-1" checked onchange="toggleHabit(1)" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bước 2 -->
+                    <div class="p-3 rounded-4 bg-light border-start border-4 border-teal">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="badge bg-teal text-white rounded-pill mb-1">Bước 2: Cấp ẩm & Làm dịu</span>
+                                <h6 class="fw-bold text-dark mb-1">Serum Hyaluronic Acid B5 Đa Tầng</h6>
+                                <div class="small text-muted">Liều lượng: 3 - 4 giọt. Vỗ nhẹ lên nền da còn ẩm để thẩm thấu sâu tầng trung bì.</div>
+                            </div>
+                            <div class="form-check form-switch fs-5">
+                                <input class="form-check-input cursor-pointer" type="checkbox" id="habit-2" checked onchange="toggleHabit(2)" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bước 3 -->
+                    <div class="p-3 rounded-4 bg-light border-start border-4 border-danger">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="badge bg-danger text-white rounded-pill mb-1">Bước 3: Chống nắng phổ rộng</span>
+                                <h6 class="fw-bold text-dark mb-1">Kem Chống Nắng Khoáng SPF 50+ PA++++</h6>
+                                <div class="small text-muted">Liều lượng: 2 đốt ngón tay. Bôi trước khi ra ngoài 20 phút. Thoa lại sau 4 tiếng nếu ở ngoài trời.</div>
+                            </div>
+                            <div class="form-check form-switch fs-5">
+                                <input class="form-check-input cursor-pointer" type="checkbox" id="habit-3" checked onchange="toggleHabit(3)" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Routine Buổi Tối -->
+        <div class="col-lg-6">
+            <div class="card border-0 rounded-4 shadow-sm p-4 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fs-4 text-primary"><i class="fas fa-moon"></i></span>
+                        <div>
+                            <h5 class="fw-bold mb-0">Quy Trình Buổi Tối (PM Routine)</h5>
+                            <div class="small text-muted">Tái tạo tế bào & Ức chế hắc sắc tố Melanin</div>
+                        </div>
+                    </div>
+                    <span class="badge bg-primary text-white rounded-pill">20:30 - 21:30</span>
+                </div>
+
+                <div class="d-flex flex-column gap-3">
+                    <!-- Bước 1 -->
+                    <div class="p-3 rounded-4 bg-light border-start border-4 border-primary">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="badge bg-primary text-white rounded-pill mb-1">Bước 1: Tẩy trang sinh học</span>
+                                <h6 class="fw-bold text-dark mb-1">Nước Tẩy Trang Micellar Water Cúc La Mã</h6>
+                                <div class="small text-muted">Lau sạch bụi mịn và lớp kem chống nắng ban ngày.</div>
+                            </div>
+                            <div class="form-check form-switch fs-5">
+                                <input class="form-check-input cursor-pointer" type="checkbox" id="habit-4" onchange="toggleHabit(4)" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bước 2 -->
+                    <div class="p-3 rounded-4 bg-light border-start border-4 border-success">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="badge bg-success text-white rounded-pill mb-1">Bước 2: Phục hồi chuyên sâu</span>
+                                <h6 class="fw-bold text-dark mb-1">Mặt nạ Tế Bào Gốc Sinh Học Biocellulose</h6>
+                                <div class="small text-muted">Đắp 20 phút (Duy trì 2 lần / tuần vào Thứ 4 và Chủ Nhật).</div>
+                            </div>
+                            <div class="form-check form-switch fs-5">
+                                <input class="form-check-input cursor-pointer" type="checkbox" id="habit-5" onchange="toggleHabit(5)" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bước 3 -->
+                    <div class="p-3 rounded-4 bg-light border-start border-4 border-teal">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="badge bg-teal text-white rounded-pill mb-1">Bước 3: Khóa ẩm tái tạo</span>
+                                <h6 class="fw-bold text-dark mb-1">Kem Dưỡng Tái Tạo Ceramide & Niacinamide 5%</h6>
+                                <div class="small text-muted">Bảo vệ màng lipid, làm mờ thâm nám và nuôi dưỡng da ban đêm.</div>
+                            </div>
+                            <div class="form-check form-switch fs-5">
+                                <input class="form-check-input cursor-pointer" type="checkbox" id="habit-6" onchange="toggleHabit(6)" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thông tin bác sĩ ký duyệt & Hành động -->
+    <div class="card border-0 rounded-4 shadow-sm p-4 bg-white">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <h6 class="fw-bold text-dark mb-1"><i class="fas fa-certificate text-teal me-2"></i> Toa Điều Trị Ký Số Điện Tử Bởi Bác Sĩ Phụ Trách</h6>
+                <div class="small text-muted">Bác sĩ: <strong>BS. CKI Lê Hoàng Yến</strong> (Chứng chỉ hành nghề số: 014288/BYT-CCHN)</div>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-teal rounded-pill px-3" onclick="alert('Đã tải tệp PDF Đơn Toa Dược Mỹ Phẩm Chuẩn Y Khoa về máy của bạn!')">
+                    <i class="fas fa-file-pdf me-1"></i> Tải Đơn Toa PDF
+                </button>
+                <button class="btn btn-warning fw-bold rounded-pill px-3" onclick="alert('Đã tạo đơn hàng mua lại mỹ phẩm theo toa! Bộ phận Dược sĩ sẽ liên hệ xác nhận giao tận nơi trong 2 giờ.')">
+                    <i class="fas fa-shopping-bag me-1"></i> Đặt Mua Lại Mỹ Phẩm Theo Toa
+                </button>
+                <a href="/CustomerPortal/Appointments" class="btn btn-teal rounded-pill px-3">
+                    <i class="fas fa-calendar-alt me-1"></i> Đặt Hẹn Tái Khám
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function toggleHabit(habitId) {
+    try {
+        const res = await fetch('/CustomerPortal/ToggleHabit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ habitId: habitId })
+        });
+        const data = await res.json();
+        if (data.success) {
+            window.showLunaToast ? window.showLunaToast('Đã lưu tiến độ thoa kem!', 'success') : console.log('Habit toggled');
+        }
+    } catch(err) {
+        console.error(err);
+    }
+}
+</script>
